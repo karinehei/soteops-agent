@@ -29,5 +29,9 @@ TEST_SETTINGS = Settings(
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    with TestClient(create_app(TEST_SETTINGS)) as test_client:
+    app = create_app(TEST_SETTINGS)
+    with TestClient(app) as test_client:
         yield test_client
+    engine = getattr(app.state, "engine", None)
+    if engine is not None:
+        engine.dispose()

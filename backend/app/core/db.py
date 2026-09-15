@@ -3,12 +3,14 @@ from collections.abc import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 
 def create_db_engine(database_url: str) -> Engine:
     return create_engine(
         database_url,
         pool_pre_ping=True,
+        poolclass=NullPool,
         future=True,
         connect_args={"connect_timeout": 3},
     )
