@@ -32,8 +32,8 @@ This work is inspired by publicly discussed public-sector workflow needs. It is 
 
 ## Stack
 
-- Backend: Python, FastAPI, Pydantic, SQLAlchemy, Alembic, PostgreSQL + pgvector, LangGraph
-- Frontend: Next.js and TypeScript, Finnish UI copy
+- Backend: Python 3.12, FastAPI, Pydantic, SQLAlchemy, Alembic, PostgreSQL + pgvector, LangGraph
+- Frontend: Next.js, TypeScript, Node.js 22, Finnish UI copy. Do not accept Dependabot major bumps (Python 3.14, Node 26, ESLint 10, TypeScript 7, pytest 9) without an explicit upgrade task.
 - Runtime: Docker Compose for local demo
 - CI: GitHub Actions (not GitLab CI)
 - Tests: pytest for backend and workflow; Playwright for the demo UI
