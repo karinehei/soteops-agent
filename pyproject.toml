@@ -39,6 +39,8 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "backend/alembic/versions/*.py" = ["E501"]
+"backend/app/workflow/prompts.py" = ["E501"]
+"backend/tests/conftest.py" = ["E402"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -56,7 +58,9 @@ pythonpath = ["backend", "mock-integration"]
 filterwarnings = [
   "error",
   "ignore::DeprecationWarning",
+  "ignore::PendingDeprecationWarning",
   "ignore::starlette.exceptions.StarletteDeprecationWarning",
+  "ignore:The default value of `allowed_objects` will change in a future version:Warning",
 ]
 
 [tool.coverage.run]

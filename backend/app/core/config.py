@@ -23,8 +23,17 @@ class Settings(BaseSettings):
     mock_integration_url: AnyHttpUrl
     cors_origins: str = "http://127.0.0.1:3000"
     llm_provider: Literal["fake", "ollama"] = "fake"
+    embedding_provider: Literal["fake", "ollama"] = "fake"
     ollama_base_url: AnyHttpUrl | None = Field(default=None)
+    ollama_llm_model: str = "llama3.2"
+    ollama_embed_model: str = "nomic-embed-text"
+    llm_timeout_seconds: float = 8.0
+    llm_max_retries: int = 2
+    retrieval_top_k: int = 4
     seed_file: str | None = Field(default=None, validation_alias="SOTEOPS_SEED_FILE")
+    instructions_file: str | None = Field(
+        default=None, validation_alias="SOTEOPS_INSTRUCTIONS_FILE"
+    )
     demo_auth_enabled: bool = False
     session_secret: str = ""
     session_ttl_hours: int = 12
@@ -51,6 +60,14 @@ class Settings(BaseSettings):
             raise ValueError(
                 "SESSION_SECRET must be at least 16 characters when demo auth is enabled"
             )
+        if self.llm_provider == "ollama" and self.ollama_base_url is None:
+            raise ValueError("OLLAMA_BASE_URL is required when LLM_PROVIDER=ollama")
+        if self.embedding_provider == "ollama" and self.ollama_base_url is None:
+            raise ValueError("OLLAMA_BASE_URL is required when EMBEDDING_PROVIDER=ollama")
+        if self.llm_max_retries < 0:
+            raise ValueError("LLM_MAX_RETRIES must be >= 0")
+        if self.retrieval_top_k < 1:
+            raise ValueError("RETRIEVAL_TOP_K must be >= 1")
         return self
 
     @property

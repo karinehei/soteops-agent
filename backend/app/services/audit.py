@@ -17,6 +17,10 @@ ALLOWED_METADATA_KEYS = frozenset(
         "policy_version",
         "missing_fields",
         "violation_codes",
+        "node",
+        "provider",
+        "run_status",
+        "source_ids",
     }
 )
 

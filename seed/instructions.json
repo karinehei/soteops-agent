@@ -1,0 +1,125 @@
+{
+  "disclaimer": "SYNTHETIC demo instructions only. Not real policy, not authorization, not affiliated with any wellbeing services county.",
+  "documents": [
+    {
+      "document_id": "SYN-OHJE-VAKITUINEN-01-v1",
+      "title": "Vakituinen käyttöoikeus (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["demo-hr-testi", "demo-talous-testi"],
+      "topics": ["permanent", "access"],
+      "body": "SYNTHETIC. Tämä ohje koskee vakituista käyttöoikeutta synteettisessä demossa. Vakituinen lukuoikeus demo-hr-testi- tai demo-talous-testi-järjestelmään edellyttää synteettistä työntekijätunnistetta, työroolia ja alkupäivää. Ohje ei ole valtuutus eikä korvaa ihmisen tarkastusta. Malli ei saa myöntää oikeutta."
+    },
+    {
+      "document_id": "SYN-OHJE-MAARAAIKAINEN-01-v1",
+      "title": "Määräaikainen käyttöoikeus (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["demo-hr-testi", "demo-talous-testi"],
+      "topics": ["temporary", "access"],
+      "body": "SYNTHETIC. Määräaikainen tai kirjaaja-oikeus vaatii loppupäivän. Ilman loppupäivää hakemus jää selvitettäväksi. Tämä ei ole tuotantopolitiikkaa. Ihmisen on vahvistettava ehdot ennen edelleenlähetystä."
+    },
+    {
+      "document_id": "SYN-OHJE-YKSIKKOSIIRTO-01-v1",
+      "title": "Yksikkösiirto (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["demo-hr-testi"],
+      "topics": ["unit-transfer"],
+      "body": "SYNTHETIC. Yksikkösiirrossa ilmoitetaan sekä nykyinen että uusi synteettinen yksikkö. Pelkkä siirto ei peri vanhoja käyttöoikeuksia. Tuntematon yksikkö merkitään tuntemattomaksi, sitä ei saa arvata. Tämä on demo-ohje, ei valtuutus."
+    },
+    {
+      "document_id": "SYN-OHJE-PUUTTUVAT-PAIVAT-01-v1",
+      "title": "Puuttuvat työsuhteen päivät (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["*"],
+      "topics": ["missing-dates"],
+      "body": "SYNTHETIC. Jos alkupäivä puuttuu, sitä ei saa keksiä. Jos loppupäivä puuttuu määräaikaisesta tai kirjaaja-pyynnöstä, pyydä täydennystä. Älä täytä päivämääriä mallin arvauksella. Näyttö tähän ohjeeseen ei ole kalibroitu todennäköisyys."
+    },
+    {
+      "document_id": "SYN-OHJE-ROOLIRAJOITUKSET-01-v1",
+      "title": "Roolirajoitukset (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["demo-hr-testi", "demo-talous-testi"],
+      "topics": ["role-restrictions"],
+      "body": "SYNTHETIC. Yhdistelmä laakari+kirjaaja ei ole sallittu tavallisessa demotyönkulussa. Rooli tuotanto-superadmin on kielletty eikä sitä saa hyväksyä tällä polulla. Tuntematon järjestelmä tai rooli vaatii manuaalisen tarkennuksen. Deterministiset säännöt ratkaisevat kelpoisuuden, ei kielimalli."
+    },
+    {
+      "document_id": "SYN-OHJE-TARKASTAJA-01-v1",
+      "title": "Tarkastajan vastuut (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["*"],
+      "topics": ["reviewer"],
+      "body": "SYNTHETIC. Tarkastaja on istunnon tunnistama ihminen. Malli ei valitse hyväksyjää eikä myönnä käyttöoikeutta. Hyväksyntä sitoutuu tasan siihen ehdotuksen tiivisteeseen, joka näytettiin. Tämä ohje on näyttöä tarkastajalle, ei valtuutus."
+    },
+    {
+      "document_id": "SYN-OHJE-INTEGRAATIO-01-v1",
+      "title": "Integraation poikkeustilanne (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["*"],
+      "topics": ["integration"],
+      "body": "SYNTHETIC. Valmistelugraafi ei kutsu mock-integraatiota eikä luo tiliä. Epäonnistunut tai keskeytynyt valmistelu jää näkyviin. Uudelleenyritys käyttää samaa hakemustekstiä alusta, ei väitettyä graafin kestävää paluutusta. Poikkeus ei saa merkitä hakemusta hyväksytyksi."
+    },
+    {
+      "document_id": "SYN-OHJE-VANHENTUNUT-01-v1",
+      "title": "Vanhentunut demo-ohje (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2020-01-01",
+      "valid_to": "2023-12-31",
+      "is_current": false,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["demo-hr-testi"],
+      "topics": ["expired", "permanent"],
+      "body": "SYNTHETIC. Vanhentunut ohje: vakituinen oikeus voitiin demossa merkitä ilman alkupäivää. Tätä ei saa käyttää voimassa olevana näyttönä. Voimassaolo päättyi 2023-12-31."
+    },
+    {
+      "document_id": "SYN-OHJE-RISTIRIITA-A-01-v1",
+      "title": "Ristiriita A: kirjaaja ilman loppupäivää (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["demo-hr-testi"],
+      "topics": ["temporary", "conflict"],
+      "body": "SYNTHETIC. RISTIRIITAINEN DEMO-OHJE A: kirjaaja-oikeus voidaan merkitä ilman loppupäivää. Tämä on tarkoituksella ristiriidassa ohjeen B kanssa. Deterministinen sääntö vaatii silti loppupäivän. Älä ratkaise ristiriitaa mallin hyväksi."
+    },
+    {
+      "document_id": "SYN-OHJE-RISTIRIITA-B-01-v1",
+      "title": "Ristiriita B: kirjaaja vaatii loppupäivän (SYNTHETIC)",
+      "version": "v1",
+      "valid_from": "2024-01-01",
+      "valid_to": null,
+      "is_current": true,
+      "synthetic_label": "SYNTHETIC",
+      "applies_to_systems": ["demo-hr-testi"],
+      "topics": ["temporary", "conflict"],
+      "body": "SYNTHETIC. RISTIRIITAINEN DEMO-OHJE B: kirjaaja-oikeus vaatii aina loppupäivän. Tämä on tarkoituksella ristiriidassa ohjeen A kanssa. Molemmat voidaan noutaa näyttönä. Ihmisen on nähtävä ristiriita. Säännöt eivät muutu noudon takia."
+    }
+  ]
+}

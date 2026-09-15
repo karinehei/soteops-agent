@@ -1,8 +1,10 @@
 # Demo notes
 
-This repository currently ships the foundation plus the access-request domain: local Postgres, health/readiness, a Finnish UI shell, synthetic identity seed, demo sessions, deterministic policy checks, and human approval APIs. LangGraph extraction, RAG, and mock forwarding are not in this slice.
+This repository currently ships foundation, access-request domain, human approval, and a bounded LangGraph preparation workflow with synthetic RAG. Mock forwarding is not in this slice.
 
 Authentication is **local demo login**, not Entra ID. Sessions live in an HttpOnly cookie. Do not store bearer tokens in `localStorage`.
+
+CI and the default local demo use **fake** LLM and embedding providers. Fake findings are labelled and must not be presented as measured model performance. Optional Ollama is a manually enabled local adapter (`LLM_PROVIDER=ollama` and/or `EMBEDDING_PROVIDER=ollama` plus `OLLAMA_BASE_URL`). It is not used in GitHub Actions. See `docs/architecture.md` for which tests use fake versus real inference.
 
 ## What to show
 
@@ -10,8 +12,8 @@ Authentication is **local demo login**, not Entra ID. Sessions live in an HttpOn
 2. Finnish copy describing the unvalidated working hypothesis.
 3. `GET /health` returning `{"status":"ok"}` with `X-Correlation-ID`.
 4. After migrations, `GET /ready` returning database and pgvector checks.
-5. `uv run soteops-seed` inserting demo requester, reviewer, and operator identities (`@demo.invalid`).
-6. `GET /auth/csrf` then `POST /auth/login` with a seeded demo password. Confirm `soteops_session` is HttpOnly and `/auth/me` reports `identity_provider: local-demo`.
-7. Create a synthetic access request, inspect the deterministic proposal, then approve it from a reviewer session. An edit must invalidate the previous proposal hash.
+5. `uv run soteops-seed` inserting demo identities and SYNTHETIC Finnish instructions.
+6. `GET /auth/csrf` then `POST /auth/login` with a seeded demo password.
+7. Create a synthetic access request. The proposal shows extracted fields with input excerpts, deterministic rule findings, retrieved SYNTHETIC citations, and a fake-provider label. Human review is still required. An edit invalidates the previous proposal hash.
 
 Do not claim operational impact. Do not demo against real employees, patients, or IAM systems.

@@ -3,6 +3,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
+from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -40,6 +41,16 @@ class SubmissionStatus(StrEnum):
     PENDING = "pending"
     ACCEPTED = "accepted"
     FAILED = "failed"
+
+
+class PreparationRunStatus(StrEnum):
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    INTERRUPTED = "interrupted"
+
+
+EMBEDDING_DIMENSION = 64
 
 
 class Organization(Base):
@@ -141,7 +152,9 @@ class Proposal(Base):
     missing_fields: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)
     rule_violations: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)
     explanation_text: Mapped[str] = mapped_column(Text, nullable=False)
+    clarification_draft: Mapped[str] = mapped_column(Text, nullable=False, default="")
     source_references: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)
+    provider_metadata: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     downstream_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     policy_version: Mapped[str] = mapped_column(String(64), nullable=False)
     payload_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
@@ -202,4 +215,61 @@ class AuditEvent(Base):
     metadata_json: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class InstructionDocument(Base):
+    __tablename__ = "instruction_documents"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    document_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    version: Mapped[str] = mapped_column(String(64), nullable=False)
+    valid_from: Mapped[date] = mapped_column(Date, nullable=False)
+    valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_current: Mapped[bool] = mapped_column(nullable=False, default=True)
+    synthetic_label: Mapped[str] = mapped_column(String(64), nullable=False, default="SYNTHETIC")
+    applies_to_systems: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)
+    topics: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    chunks: Mapped[list["InstructionChunk"]] = relationship(back_populates="document")
+
+
+class InstructionChunk(Base):
+    __tablename__ = "instruction_chunks"
+    __table_args__ = (
+        UniqueConstraint("document_pk", "chunk_index", name="uq_instruction_chunks_doc_index"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    document_pk: Mapped[UUID] = mapped_column(ForeignKey("instruction_documents.id"), index=True)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_id: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIMENSION), nullable=False)
+    document: Mapped[InstructionDocument] = relationship(back_populates="chunks")
+
+
+class PreparationRun(Base):
+    __tablename__ = "preparation_runs"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    request_id: Mapped[UUID] = mapped_column(ForeignKey("access_requests.id"), index=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    current_node: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[PreparationRunStatus] = mapped_column(String(16), nullable=False, index=True)
+    error_category: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    provider_name: Mapped[str] = mapped_column(String(32), nullable=False)
+    model: Mapped[str] = mapped_column(String(128), nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    embedding_provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    durable_resume: Mapped[bool] = mapped_column(nullable=False, default=False)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )

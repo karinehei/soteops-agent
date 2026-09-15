@@ -44,6 +44,35 @@ def test_settings_reject_unknown_llm_provider() -> None:
         )
 
 
+def test_ollama_requires_base_url() -> None:
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="test",
+            database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+            mock_integration_url="http://127.0.0.1:8001",
+            llm_provider="ollama",
+            ollama_base_url=None,
+        )
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="test",
+            database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+            mock_integration_url="http://127.0.0.1:8001",
+            embedding_provider="ollama",
+            ollama_base_url=None,
+        )
+
+
+def test_settings_reject_unknown_embedding_provider() -> None:
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="test",
+            database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+            mock_integration_url="http://127.0.0.1:8001",
+            embedding_provider="openai",  # type: ignore[arg-type]
+        )
+
+
 def test_settings_reject_unknown_fields() -> None:
     with pytest.raises(ValidationError):
         Settings(

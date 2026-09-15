@@ -14,6 +14,9 @@ REQUIRED_TABLES = {
     "approvals",
     "submissions",
     "audit_events",
+    "instruction_documents",
+    "instruction_chunks",
+    "preparation_runs",
 }
 
 

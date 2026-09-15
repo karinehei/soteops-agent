@@ -13,6 +13,12 @@ from app.auth.passwords import hash_password, verify_password
 from app.core.config import load_settings
 from app.core.db import create_db_engine, create_session_factory
 from app.models import AccessTarget, Organization, User, UserRole
+from app.providers.factory import get_embedder
+from app.retrieval.ingest import (
+    default_instructions_path,
+    load_instructions_payload,
+    seed_instructions,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +87,18 @@ def main() -> None:
     session_factory = create_session_factory(engine)
     with session_factory() as session:
         seed_identities(session, payload)
+        instructions_path = (
+            Path(settings.instructions_file)
+            if settings.instructions_file
+            else default_instructions_path()
+        )
+        seed_instructions(
+            session,
+            load_instructions_payload(instructions_path),
+            embedder=get_embedder(settings),
+        )
         session.commit()
-    logger.info("Synthetic seed completed from %s", seed_path)
+    logger.info("Synthetic seed completed from %s and %s", seed_path, instructions_path)
 
 
 if __name__ == "__main__":

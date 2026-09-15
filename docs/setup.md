@@ -53,12 +53,14 @@ This repository uses **uv** as the only Python package manager. Install from the
 uv sync --locked --all-packages --group dev
 ```
 
-Apply migrations and load synthetic identities:
+Apply migrations and load synthetic identities plus SYNTHETIC instructions:
 
 ```bash
 uv run --directory backend alembic upgrade head
 uv run soteops-seed
 ```
+
+Default `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake`. Those paths are what CI runs. To try local Ollama, set `LLM_PROVIDER=ollama` (and/or `EMBEDDING_PROVIDER=ollama`) and `OLLAMA_BASE_URL`; do not present that as a measured evaluation.
 
 Demo login uses the seeded `@demo.invalid` accounts and passwords in `seed/identities.json`. Those passwords are local demo credentials, not directory or Entra ID secrets.
 
@@ -97,7 +99,7 @@ uv run pytest --junitxml=junit.xml --cov --cov-report=term-missing
 cd frontend && npm ci && npm run lint && npm run typecheck && npm run build
 ```
 
-Integration tests require Postgres on `127.0.0.1:5432` after migrations. CI uses fake model providers only and does not call cloud AI.
+Integration tests require Postgres on `127.0.0.1:5432` after migrations. CI sets `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake` and does not call Ollama or cloud AI. The Ollama adapter is covered by mocked timeout tests only. If port `5432` is already used by another project, set `POSTGRES_HOST_PORT` and `DATABASE_URL` to a free local port instead of stopping that project.
 
 ## Optional Compose stack
 

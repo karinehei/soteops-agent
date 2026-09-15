@@ -1,6 +1,6 @@
 # SoteOps Agent — implementation plan
 
-Status: foundation and access-request / approval-boundary slice implemented. Remaining MVP slices follow section 12. Do not claim the product hypothesis has been validated.
+Status: foundation, approval boundary, and bounded LangGraph preparation are implemented. Remaining MVP slices follow section 12. Do not claim the product hypothesis has been validated.
 
 ## 1. Product
 
@@ -122,7 +122,7 @@ Terminal-ish states:
 - `forwarded`: mock accepted the current hash. Further edits create a new request or a new proposal that cannot reuse the old submission key.
 - `forward_failed`: still approved if the hash is unchanged; retry allowed.
 
-LangGraph owns only `preparing` (extract → rules → retrieve → explain). Human review and forwarding are application services that resume from persisted state, not an open-ended agent loop.
+LangGraph owns only `preparing` (the six nodes in section 10) and stops before approval and submission. Human review and forwarding are application services that resume from persisted request state. Durable graph checkpoint resumption is not implemented.
 
 ## 7. Authentication and authorization
 
@@ -157,12 +157,22 @@ LangGraph owns only `preparing` (extract → rules → retrieve → explain). Hu
 
 ## 10. Workflow and providers
 
-LangGraph nodes, in order: `extract` → `apply_rules` → `retrieve_instructions` → `explain`. Interrupt after `explain`. Do not give the graph tools that mutate review decisions or call mock-iam.
+LangGraph nodes, in order:
 
-- `apply_rules` is pure Python. MVP rules: required fields; `prod` + privileged requires `ends_at`; shared-account + privileged is prohibited; unknown access target is missing, not guessed; conflicting duplicate open requests for the same subject+target+role are flagged.
-- RAG query uses the structured fields plus a short embedding of the source text. Citations include `document_id`, `version`, and passage.
-- `providers/fake.py` returns stable fixtures keyed by request id for CI.
-- `providers/ollama.py` is opt-in via Compose profile and env. Default local demo can run entirely on fakes.
+1. `extract_fields`
+2. `validate_extracted_fields`
+3. `retrieve_instructions`
+4. `explain_findings`
+5. `validate_citations`
+6. `persist_proposal_or_clarification`
+
+The graph stops after persist. It has no tools that approve, reject, or call mock-iam. `preparation_runs` records the current node and marks leftover `running` rows as `interrupted`. Durable graph checkpoint resumption is not implemented; a retry starts from the current request text.
+
+- AI may extract and explain. Deterministic `validate_extracted_fields` plus policy rules decide review eligibility. Unknown or ambiguous values stay unknown. Values that are not in the source text are dropped. Supporting input excerpts are stored beside extracted values.
+- Retrieval combines lexical overlap and vector rank, filters by validity dates and target system, deduplicates by `document_id`, uses stable `source_id` values, and respects `RETRIEVAL_TOP_K`. Missing evidence yields no supported answer.
+- Citation IDs are membership-checked. A valid ID does not prove that the passage supports the claim. Similarity and model self-confidence are not shown as calibrated probabilities.
+- `providers/fake.py` is the CI and default path. Fake outputs are labelled and are not measured LLM performance.
+- `providers/ollama.py` is opt-in (`LLM_PROVIDER` and `EMBEDDING_PROVIDER` are independent). It is not used in GitHub Actions.
 
 ## 11. Tests and measurable demo outcomes
 
@@ -197,7 +207,7 @@ LangGraph nodes, in order: `extract` → `apply_rules` → `retrieve_instruction
 1. Compose, Postgres/pgvector, Alembic models, seed identities **(done in foundation)**
 2. Auth, request CRUD, audit **(done in this slice)**
 3. Rules engine and proposal hashing **(done in this slice)**
-4. Fake providers, LangGraph preparation graph, RAG ingest/retrieve
+4. Fake providers, LangGraph preparation graph, RAG ingest/retrieve **(done in this slice)**
 5. Review API + invalidation **(done in this slice; forwarding still later)**
 6. mock-integration + idempotent forward/retry
 7. Finnish Next.js UI for the eight-step path

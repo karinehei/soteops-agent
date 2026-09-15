@@ -1,12 +1,13 @@
 # Architecture
 
-SoteOps Agent is a modular FastAPI monolith plus a small mock integration service. PostgreSQL with pgvector is the only datastore. This slice adds the access-request domain, deterministic policy checks, and a human approval boundary. LangGraph and RAG are still later work.
+SoteOps Agent is a modular FastAPI monolith plus a small mock integration service. PostgreSQL with pgvector is the only datastore. Access-request domain, deterministic policy, human approval, and a bounded LangGraph preparation workflow are implemented. Mock forwarding is still later work.
 
 ```text
 browser (Next.js, fi)
         -> FastAPI monolith (:8000)
                 -> PostgreSQL + pgvector (:5432, localhost)
                 -> mock-integration (:8001)
+                -> optional local Ollama (manual)
 ```
 
 ## Runtime boundaries
@@ -15,7 +16,7 @@ browser (Next.js, fi)
 - `GET /health` is process liveness and does not touch the database.
 - `GET /ready` checks PostgreSQL and the `vector` extension.
 - Every HTTP response includes a **server-generated** `X-Correlation-ID`. Client-supplied IDs are ignored. Logs are JSON and include that id when present.
-- Settings are validated with Pydantic. `DATABASE_URL` must be PostgreSQL. `LLM_PROVIDER` is `fake` or `ollama`. Unknown settings fields are rejected.
+- Settings are validated with Pydantic. `DATABASE_URL` must be PostgreSQL. `LLM_PROVIDER` and `EMBEDDING_PROVIDER` are independently `fake` or `ollama`. Unknown settings fields are rejected.
 - Seed data is synthetic and loaded only by `soteops-seed`.
 
 ## Authentication (local demo only)
@@ -24,28 +25,50 @@ Authentication is **local demo identity**, not Entra ID or any production direct
 
 `DEMO_AUTH_ENABLED` works only when `ENVIRONMENT` is `local`, `test`, `ci`, or `demo`, and `SESSION_SECRET` is at least 16 characters. Outside that explicit configuration, login and session-authenticated routes are rejected.
 
-Actor, owner, and reviewer identities are taken from the session. Request bodies cannot set them.
-
-| Role | Access |
-| --- | --- |
-| requester | create, list, get, edit, and resubmit own requests; read own audit history |
-| reviewer | authorized review queue; review, approve, or reject; cannot approve a request they own |
-| operator | read requests and audit; cannot approve |
+Actor, owner, and reviewer identities are taken from the session. Request bodies cannot set them. The model is not part of authentication or authorization.
 
 ## Domain and policy
 
-`AccessRequest` holds the synthetic case. Each edit or resubmit creates a new `Proposal` (extracted fields, excerpts, missing fields, rule violations, explanation, source references, downstream payload, policy version, payload hash) and invalidates the previous proposal. `Approval` binds to that exact proposal id, revision, payload hash, and policy version. `Submission` is created on approve with `idempotency_key = "{request_id}:{payload_hash}"`. `AuditEvent` records allowlisted metadata only.
+`AccessRequest` holds the synthetic case. Each edit or resubmit creates a new `Proposal` and invalidates the previous proposal. `Approval` binds to that exact proposal id, revision, payload hash, and policy version. `Submission` is created on approve with `idempotency_key = "{request_id}:{payload_hash}"`. `AuditEvent` records allowlisted metadata only.
 
-Deterministic rules live in versioned `seed/policy/v1.json`, not in an LLM response: required fields, allowed job-role/access-role combinations, temporary access requires an end date, start date must not exceed end date, unknown systems or roles need clarification, and prohibited roles cannot be approved in the normal workflow.
+Deterministic rules live in versioned `seed/policy/v1.json`, not in an LLM response. The model may extract and explain. Rules decide whether a proposal is eligible for review.
+
+## Preparation workflow
+
+LangGraph runs only this bounded path and stops before approval and submission:
+
+1. `extract_fields`
+2. `validate_extracted_fields`
+3. `retrieve_instructions`
+4. `explain_findings`
+5. `validate_citations`
+6. `persist_proposal_or_clarification`
+
+Progress is stored on `AccessRequest.status` and `preparation_runs`. A run left in `running` is marked `interrupted` on the next prepare. **Durable graph checkpoint resumption is not implemented.** Retries start from the current request text.
+
+User text and retrieved documents are untrusted. Prompt injection cannot change authorization, tools, or policy rules. Citation IDs are checked for membership in the retrieval set; a valid ID does not prove that the passage supports the claim. Similarity scores and model self-confidence are not shown as calibrated probabilities.
+
+## Fake versus real inference
+
+CI and the default local demo use deterministic **fake** LLM and embedding providers. Fake outputs are labelled `SYNTEETTINEN FAKE-TARJOAJA — ei mitattua mallisuorituskykyä` and must not be presented as measured model performance. Optional Ollama is local-only and must be enabled explicitly (`LLM_PROVIDER=ollama` and/or `EMBEDDING_PROVIDER=ollama` plus `OLLAMA_BASE_URL`).
+
+| Path | Inference |
+| --- | --- |
+| GitHub Actions (`LLM_PROVIDER=fake`, `EMBEDDING_PROVIDER=fake`) | Fake LLM and hash embeddings only. No Ollama, no paid/cloud models. |
+| Default Compose / local demo | Same fake path unless env is changed. |
+| `backend/tests/test_workflow.py` | Fake LLM unit tests. The Ollama timeout case is an httpx mock; it does not call a running model. |
+| `backend/tests/test_retrieval.py` and request API tests | Full six-node graph against Postgres with fake providers. |
+| `soteops-seed` | Embeddings from the configured embedding provider (fake in CI). |
+| Manual local Ollama | Real local `/api/chat` and/or `/api/embeddings` only when those providers are set to `ollama`. Not an evaluation harness. |
 
 ## Packages
 
 | Path | Role |
 | --- | --- |
-| `backend/` | FastAPI app, SQLAlchemy, Alembic, seed command |
+| `backend/` | FastAPI app, SQLAlchemy, Alembic, seed command, LangGraph preparation |
 | `mock-integration/` | Simulated receiver. Stores request records later; does not create accounts |
 | `frontend/` | Next.js App Router shell, Finnish copy, system fonts |
-| `seed/` | Synthetic identities JSON and versioned policy |
+| `seed/` | Synthetic identities, policy, and Finnish instruction corpus |
 | `.github/workflows/` | GitHub Actions CI |
 
 Python dependencies are locked once at the repository root with uv (`uv.lock`). Frontend dependencies are locked with `frontend/package-lock.json` and installed using `npm ci`.

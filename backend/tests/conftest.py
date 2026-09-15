@@ -1,6 +1,10 @@
 import os
+import warnings
 from collections.abc import Iterator
 from pathlib import Path
+
+warnings.filterwarnings("ignore", module=r"langgraph\..*")
+warnings.filterwarnings("ignore", module=r"langchain_core\..*")
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,7 +14,14 @@ from app.auth.sessions import CSRF_COOKIE, CSRF_HEADER
 from app.core.config import Settings
 from app.core.db import create_db_engine, create_session_factory
 from app.main import create_app
+from app.retrieval.ingest import (
+    default_instructions_path,
+    load_instructions_payload,
+    seed_instructions,
+)
 from app.seed import default_seed_path, load_seed_payload, seed_identities
+
+warnings.filterwarnings("ignore", message=".*allowed_objects.*")
 
 os.environ.setdefault(
     "DATABASE_URL",
@@ -31,6 +42,7 @@ TEST_SETTINGS = Settings(
     mock_integration_url="http://127.0.0.1:8001",
     cors_origins="http://127.0.0.1:3000",
     llm_provider="fake",
+    embedding_provider="fake",
     ollama_base_url=None,
     seed_file="seed/identities.json",
     demo_auth_enabled=True,
@@ -100,6 +112,7 @@ def seed_demo_users() -> None:
     try:
         with factory() as session:
             seed_identities(session, load_seed_payload(default_seed_path()))
+            seed_instructions(session, load_instructions_payload(default_instructions_path()))
             session.commit()
     finally:
         engine.dispose()
@@ -113,7 +126,7 @@ def isolated_db(seed_demo_users: None) -> None:
             connection.execute(
                 text(
                     "TRUNCATE audit_events, submissions, approvals, sessions, "
-                    "access_requests, proposals RESTART IDENTITY CASCADE"
+                    "preparation_runs, access_requests, proposals RESTART IDENTITY CASCADE"
                 )
             )
     finally:

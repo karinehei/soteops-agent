@@ -4,14 +4,29 @@ from datetime import UTC, date, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import AccessRequest, Proposal, RequestStatus
-from app.rules.engine import evaluate_rules, is_approvable
-from app.rules.hashing import payload_hash
+from app.core.config import Settings, load_settings
+from app.models import AccessRequest, PreparationRun, PreparationRunStatus, Proposal, RequestStatus
+from app.providers import PROMPT_VERSION, ProviderError
+from app.providers.factory import get_embedder, get_llm
 from app.rules.policy import PolicyConfig, current_policy
 from app.rules.transitions import ensure_transition
 from app.services.audit import record_audit
+from app.workflow.context import WorkflowContext
+from app.workflow.graph import GRAPH_NODES, build_preparation_graph
+from app.workflow.nodes import persist_failure, workflow_ctx
+from app.workflow.schemas import PrepState
+
+_GRAPH = None
+
+
+def _graph() -> Any:
+    global _GRAPH
+    if _GRAPH is None:
+        _GRAPH = build_preparation_graph()
+    return _GRAPH
 
 
 def _iso(value: date | None) -> str | None:
@@ -39,13 +54,43 @@ def build_excerpts(original_text: str, fields: dict[str, Any]) -> dict[str, str]
     return excerpts
 
 
+def interrupt_stale_runs(session: Session, request_id: UUID, actor_id: UUID) -> None:
+    runs = session.scalars(
+        select(PreparationRun).where(
+            PreparationRun.request_id == request_id,
+            PreparationRun.status == PreparationRunStatus.RUNNING,
+        )
+    ).all()
+    for run in runs:
+        run.status = PreparationRunStatus.INTERRUPTED
+        record_audit(
+            session,
+            event_type="preparation_interrupted",
+            actor_id=actor_id,
+            request_id=request_id,
+            metadata={
+                "revision": run.revision,
+                "node": run.current_node,
+                "run_status": PreparationRunStatus.INTERRUPTED.value,
+            },
+        )
+    session.flush()
+
+
 def prepare_proposal(
     session: Session,
     request: AccessRequest,
     actor_id: UUID,
     policy: PolicyConfig | None = None,
+    settings: Settings | None = None,
+    llm: Any = None,
+    embedder: Any = None,
 ) -> Proposal:
     policy = policy or current_policy()
+    settings = settings or load_settings()
+    llm = llm or get_llm(settings)
+    embedder = embedder or get_embedder(settings)
+
     ensure_transition(request.status, RequestStatus.PREPARING)
     request.status = RequestStatus.PREPARING
 
@@ -61,70 +106,65 @@ def prepare_proposal(
                 metadata={"revision": previous.revision, "proposal_id": str(previous.id)},
             )
 
-    fields = request_fields(request)
-    missing, violations = evaluate_rules(fields, policy)
-    excerpts = build_excerpts(request.original_text, fields)
-    downstream = {
-        "employee_identifier": request.employee_identifier,
-        "target_system": request.target_system,
-        "requested_access_role": request.requested_access_role,
-        "start_date": _iso(request.start_date),
-        "end_date": _iso(request.end_date),
-        "revision": request.revision,
-        "policy_version": policy.version,
-    }
-    digest = payload_hash(downstream)
-    explanation = _explain(missing, violations, policy.version)
-    proposal = Proposal(
+    interrupt_stale_runs(session, request.id, actor_id)
+    run = PreparationRun(
         id=uuid4(),
         request_id=request.id,
         revision=request.revision,
-        extracted_fields=fields,
-        excerpts=excerpts,
-        missing_fields=missing,
-        rule_violations=violations,
-        explanation_text=explanation,
-        source_references=[{"policy_version": policy.version, "source": policy.source}],
-        downstream_payload=downstream,
-        policy_version=policy.version,
-        payload_hash=digest,
+        current_node="start",
+        status=PreparationRunStatus.RUNNING,
+        error_category=None,
+        provider_name=llm.name,
+        model=llm.model,
+        prompt_version=PROMPT_VERSION,
+        embedding_provider=embedder.name,
+        durable_resume=False,
     )
-    session.add(proposal)
+    session.add(run)
     session.flush()
-    request.current_proposal_id = proposal.id
-    next_status = (
-        RequestStatus.READY_FOR_REVIEW
-        if is_approvable(missing, violations)
-        else RequestStatus.NEEDS_CLARIFICATION
-    )
-    ensure_transition(request.status, next_status)
-    request.status = next_status
-    record_audit(
-        session,
-        event_type="proposal_prepared",
-        actor_id=actor_id,
-        request_id=request.id,
-        metadata={
-            "revision": request.revision,
-            "proposal_id": str(proposal.id),
-            "status": next_status.value,
-            "missing_fields": missing,
-            "violation_codes": [item["code"] for item in violations],
-            "policy_version": policy.version,
+
+    initial = PrepState(
+        request_id=str(request.id),
+        revision=request.revision,
+        original_text=request.original_text,
+        form_fields=request_fields(request),
+        provider_metadata={
+            "llm_provider": llm.name,
+            "llm_label": llm.label,
+            "prompt_version": PROMPT_VERSION,
+            "embedding_provider": embedder.name,
+            "fake_output": llm.name == "fake",
+            "measured_performance": False,
+            "durable_graph_resume": False,
+            "graph_nodes": list(GRAPH_NODES),
         },
     )
-    return proposal
-
-
-def _explain(missing: list[str], violations: list[dict[str, str]], policy_version: str) -> str:
-    if not missing and not violations:
-        return (
-            f"Deterministic checks against {policy_version} found no blocking issues. "
-            "Human review is still required."
+    token = workflow_ctx.set(
+        WorkflowContext(
+            session=session,
+            request=request,
+            run=run,
+            actor_id=actor_id,
+            settings=settings,
+            policy=policy,
+            llm=llm,
+            embedder=embedder,
         )
-    parts = [f"Deterministic checks against {policy_version}:"]
-    if missing:
-        parts.append("Missing fields: " + ", ".join(missing) + ".")
-    for item in violations:
-        parts.append(item["message"])
-    return " ".join(parts)
+    )
+    try:
+        _graph().invoke(initial.model_dump())
+        run.status = PreparationRunStatus.COMPLETED
+        run.current_node = "persist_proposal_or_clarification"
+        session.flush()
+    except ProviderError as exc:
+        run.status = PreparationRunStatus.FAILED
+        run.error_category = exc.category
+        persist_failure(initial, exc)
+        session.flush()
+    finally:
+        workflow_ctx.reset(token)
+
+    proposal = session.get(Proposal, request.current_proposal_id)
+    if proposal is None:
+        raise RuntimeError("preparation did not persist a proposal")
+    return proposal

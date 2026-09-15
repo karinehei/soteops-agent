@@ -22,6 +22,9 @@ env:
   SESSION_SECRET: ci-session-secret-not-production
   COOKIE_SECURE: "false"
   POLICY_FILE: seed/policy/v1.json
+  EMBEDDING_PROVIDER: fake
+  LLM_MAX_RETRIES: "2"
+  RETRIEVAL_TOP_K: "4"
 
 jobs:
   backend:

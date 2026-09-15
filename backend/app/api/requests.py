@@ -34,7 +34,9 @@ class ProposalOut(BaseModel):
     missing_fields: list[Any]
     rule_violations: list[Any]
     explanation_text: str
+    clarification_draft: str = ""
     source_references: list[Any]
+    provider_metadata: dict[str, Any] = {}
     downstream_payload: dict[str, Any]
     policy_version: str
     payload_hash: str
