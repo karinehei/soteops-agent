@@ -9,6 +9,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.passwords import hash_password, verify_password
 from app.core.config import load_settings
 from app.core.db import create_db_engine, create_session_factory
 from app.models import AccessTarget, Organization, User, UserRole
@@ -45,6 +46,7 @@ def seed_identities(session: Session, payload: dict[str, Any]) -> None:
         user = session.scalar(select(User).where(User.email == item["email"]))
         organization = slug_to_org[item["organization_slug"]]
         role = UserRole(item["role"])
+        password = item["password"]
         if user is None:
             session.add(
                 User(
@@ -52,6 +54,7 @@ def seed_identities(session: Session, payload: dict[str, Any]) -> None:
                     email=item["email"],
                     display_name=item["display_name"],
                     role=role,
+                    password_hash=hash_password(password),
                     organization_id=organization.id,
                 )
             )
@@ -59,6 +62,8 @@ def seed_identities(session: Session, payload: dict[str, Any]) -> None:
             user.display_name = item["display_name"]
             user.role = role
             user.organization_id = organization.id
+            if not verify_password(user.password_hash, password):
+                user.password_hash = hash_password(password)
 
     for item in payload["access_targets"]:
         target = session.scalar(select(AccessTarget).where(AccessTarget.slug == item["slug"]))

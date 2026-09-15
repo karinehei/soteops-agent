@@ -5,6 +5,7 @@ description = "SoteOps Agent FastAPI modular monolith."
 requires-python = ">=3.12"
 dependencies = [
   "alembic>=1.16.5,<2",
+  "argon2-cffi>=25.1.0,<26",
   "fastapi[standard-no-fastapi-cloud-cli]>=0.141.1,<0.142",
   "psycopg[binary]>=3.2.9,<4",
   "pydantic-settings>=2.10.1,<3",

@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.auth import router as auth_router
 from app.api.health import router as health_router
+from app.api.requests import router as requests_router
 from app.core.config import Settings, load_settings
 from app.core.db import create_db_engine, create_session_factory
 from app.core.logging import CorrelationIdMiddleware, configure_logging
@@ -40,4 +42,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health_router)
+    app.include_router(auth_router)
+    app.include_router(requests_router)
     return app

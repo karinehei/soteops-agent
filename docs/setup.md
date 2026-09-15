@@ -20,6 +20,8 @@ cp .env.example .env
 
 Replace every placeholder in `.env` with local synthetic values. Do not reuse production passwords or real directory credentials. Compose reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` from `.env`. The API reads `DATABASE_URL`.
 
+`DEMO_AUTH_ENABLED` and `SESSION_SECRET` enable **local demo authentication only**. This is not Entra ID. Demo accounts are disabled unless `ENVIRONMENT` is `local`, `test`, `ci`, or `demo`. Do not put bearer tokens in `localStorage`; the browser should send the HttpOnly session cookie.
+
 Example local-only values (not for any real system):
 
 ```bash
@@ -28,6 +30,8 @@ POSTGRES_PASSWORD=soteops
 POSTGRES_DB=soteops
 POSTGRES_HOST_PORT=5432
 DATABASE_URL=postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops
+DEMO_AUTH_ENABLED=true
+SESSION_SECRET=CHANGE_ME_LOCAL_SESSION_SECRET
 ```
 
 ## Start PostgreSQL with pgvector
@@ -55,6 +59,8 @@ Apply migrations and load synthetic identities:
 uv run --directory backend alembic upgrade head
 uv run soteops-seed
 ```
+
+Demo login uses the seeded `@demo.invalid` accounts and passwords in `seed/identities.json`. Those passwords are local demo credentials, not directory or Entra ID secrets.
 
 Run the API and mock receiver:
 

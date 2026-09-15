@@ -18,6 +18,10 @@ env:
   LOG_LEVEL: INFO
   MOCK_INTEGRATION_URL: http://127.0.0.1:8001
   CORS_ORIGINS: http://127.0.0.1:3000
+  DEMO_AUTH_ENABLED: "true"
+  SESSION_SECRET: ci-session-secret-not-production
+  COOKIE_SECURE: "false"
+  POLICY_FILE: seed/policy/v1.json
 
 jobs:
   backend:

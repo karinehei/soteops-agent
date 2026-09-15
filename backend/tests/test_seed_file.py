@@ -14,3 +14,5 @@ def test_seed_identities_are_synthetic_and_complete() -> None:
     assert roles == {"requester", "reviewer", "operator"}
     for user in payload["users"]:
         assert user["email"].endswith("@demo.invalid")
+        assert user["password"]
+        assert "entra" not in user["password"].lower()

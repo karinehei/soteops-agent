@@ -1,6 +1,6 @@
 # SoteOps Agent — implementation plan
 
-Status: foundation implemented. Remaining MVP slices follow section 12. Do not claim the product hypothesis has been validated.
+Status: foundation and access-request / approval-boundary slice implemented. Remaining MVP slices follow section 12. Do not claim the product hypothesis has been validated.
 
 ## 1. Product
 
@@ -195,10 +195,10 @@ LangGraph nodes, in order: `extract` → `apply_rules` → `retrieve_instruction
 ## 12. Implementation order (after this plan is accepted)
 
 1. Compose, Postgres/pgvector, Alembic models, seed identities **(done in foundation)**
-2. Auth, request CRUD, audit
-3. Rules engine and proposal hashing
+2. Auth, request CRUD, audit **(done in this slice)**
+3. Rules engine and proposal hashing **(done in this slice)**
 4. Fake providers, LangGraph preparation graph, RAG ingest/retrieve
-5. Review API + invalidation
+5. Review API + invalidation **(done in this slice; forwarding still later)**
 6. mock-integration + idempotent forward/retry
 7. Finnish Next.js UI for the eight-step path
 8. Remaining pytest + Playwright coverage for the full demo path

@@ -1,0 +1,22 @@
+{
+  "version": "policy-v1",
+  "required_fields": [
+    "employee_identifier",
+    "target_system",
+    "requested_access_role",
+    "start_date"
+  ],
+  "allowed_systems": ["demo-hr-testi", "demo-talous-testi"],
+  "allowed_job_roles": ["sairaanhoitaja", "laakari", "taloussihteeri"],
+  "allowed_access_roles": ["lukuoikeus", "kirjaaja"],
+  "allowed_employment_types": ["vakituinen", "maaraaikainen"],
+  "allowed_combinations": [
+    {"job_role": "sairaanhoitaja", "access_role": "lukuoikeus"},
+    {"job_role": "sairaanhoitaja", "access_role": "kirjaaja"},
+    {"job_role": "laakari", "access_role": "lukuoikeus"},
+    {"job_role": "taloussihteeri", "access_role": "lukuoikeus"},
+    {"job_role": "taloussihteeri", "access_role": "kirjaaja"}
+  ],
+  "temporary_access_roles": ["kirjaaja"],
+  "prohibited_access_roles": ["tuotanto-superadmin"]
+}

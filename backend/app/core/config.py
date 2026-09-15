@@ -1,7 +1,9 @@
 from typing import Literal
 
-from pydantic import AnyHttpUrl, Field, field_validator
+from pydantic import AnyHttpUrl, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEMO_ENVIRONMENTS = frozenset({"local", "test", "ci", "demo"})
 
 
 class Settings(BaseSettings):
@@ -15,7 +17,7 @@ class Settings(BaseSettings):
         populate_by_name=True,
     )
 
-    environment: Literal["local", "test", "ci"] = "local"
+    environment: Literal["local", "test", "ci", "demo"] = "local"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     database_url: str
     mock_integration_url: AnyHttpUrl
@@ -23,6 +25,11 @@ class Settings(BaseSettings):
     llm_provider: Literal["fake", "ollama"] = "fake"
     ollama_base_url: AnyHttpUrl | None = Field(default=None)
     seed_file: str | None = Field(default=None, validation_alias="SOTEOPS_SEED_FILE")
+    demo_auth_enabled: bool = False
+    session_secret: str = ""
+    session_ttl_hours: int = 12
+    cookie_secure: bool = False
+    policy_file: str | None = None
 
     @field_validator("database_url")
     @classmethod
@@ -35,6 +42,16 @@ class Settings(BaseSettings):
         if value.startswith("postgresql://"):
             return "postgresql+psycopg://" + value.removeprefix("postgresql://")
         return value
+
+    @model_validator(mode="after")
+    def validate_demo_auth(self) -> "Settings":
+        if self.demo_auth_enabled and self.environment not in DEMO_ENVIRONMENTS:
+            raise ValueError("DEMO_AUTH_ENABLED is only allowed for local, demo, test or ci")
+        if self.demo_auth_enabled and len(self.session_secret) < 16:
+            raise ValueError(
+                "SESSION_SECRET must be at least 16 characters when demo auth is enabled"
+            )
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

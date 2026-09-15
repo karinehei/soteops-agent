@@ -3,7 +3,18 @@ from sqlalchemy import inspect, text
 from app.core.db import create_db_engine
 from tests.conftest import TEST_SETTINGS
 
-REQUIRED_TABLES = {"alembic_version", "organizations", "users", "access_targets"}
+REQUIRED_TABLES = {
+    "alembic_version",
+    "organizations",
+    "users",
+    "access_targets",
+    "sessions",
+    "access_requests",
+    "proposals",
+    "approvals",
+    "submissions",
+    "audit_events",
+}
 
 
 def test_pgvector_and_identity_tables_exist_after_migrations() -> None:

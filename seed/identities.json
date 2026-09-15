@@ -1,5 +1,5 @@
 {
-  "disclaimer": "Synthetic demo identities only. Not real people, employers, or systems.",
+  "disclaimer": "Synthetic demo identities only. Not real people, employers, or systems. Passwords are local demo credentials, not Entra ID.",
   "organizations": [
     {
       "slug": "synteettinen-demo-org",
@@ -11,18 +11,35 @@
       "email": "aino.esimerkki@demo.invalid",
       "display_name": "Aino Esimerkki",
       "role": "requester",
+      "password": "demo-aino-passphrase",
+      "organization_slug": "synteettinen-demo-org"
+    },
+    {
+      "email": "kaisa.esimerkki@demo.invalid",
+      "display_name": "Kaisa Esimerkki",
+      "role": "requester",
+      "password": "demo-kaisa-passphrase",
       "organization_slug": "synteettinen-demo-org"
     },
     {
       "email": "ville.valvoja@demo.invalid",
       "display_name": "Ville Valvoja",
       "role": "reviewer",
+      "password": "demo-ville-passphrase",
+      "organization_slug": "synteettinen-demo-org"
+    },
+    {
+      "email": "siiri.tarkastaja@demo.invalid",
+      "display_name": "Siiri Tarkastaja",
+      "role": "reviewer",
+      "password": "demo-siiri-passphrase",
       "organization_slug": "synteettinen-demo-org"
     },
     {
       "email": "outi.operaattori@demo.invalid",
       "display_name": "Outi Operaattori",
       "role": "operator",
+      "password": "demo-outi-passphrase",
       "organization_slug": "synteettinen-demo-org"
     }
   ],

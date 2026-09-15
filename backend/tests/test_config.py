@@ -52,3 +52,25 @@ def test_settings_reject_unknown_fields() -> None:
             mock_integration_url="http://127.0.0.1:8001",
             paid_api_key="secret",  # type: ignore[call-arg]
         )
+
+
+def test_demo_auth_requires_session_secret() -> None:
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="test",
+            database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+            mock_integration_url="http://127.0.0.1:8001",
+            demo_auth_enabled=True,
+            session_secret="short",
+        )
+
+
+def test_demo_auth_can_be_disabled() -> None:
+    settings = Settings(
+        environment="test",
+        database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+        mock_integration_url="http://127.0.0.1:8001",
+        demo_auth_enabled=False,
+        session_secret="",
+    )
+    assert settings.demo_auth_enabled is False
