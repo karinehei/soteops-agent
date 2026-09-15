@@ -60,6 +60,7 @@ filterwarnings = [
   "ignore::DeprecationWarning",
   "ignore::PendingDeprecationWarning",
   "ignore::starlette.exceptions.StarletteDeprecationWarning",
+  "ignore::langchain_core._api.deprecation.LangChainPendingDeprecationWarning",
   "ignore:The default value of `allowed_objects` will change in a future version:Warning",
 ]
 

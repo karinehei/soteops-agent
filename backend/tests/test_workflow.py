@@ -10,6 +10,10 @@ from app.workflow.schemas import ExplanationResult, ExtractionResult, PrepState
 
 
 def test_graph_stops_before_approval_and_has_expected_nodes() -> None:
+    import warnings
+
+    from langchain_core._api.deprecation import LangChainPendingDeprecationWarning
+
     assert GRAPH_NODES == (
         "extract_fields",
         "validate_extracted_fields",
@@ -18,7 +22,9 @@ def test_graph_stops_before_approval_and_has_expected_nodes() -> None:
         "validate_citations",
         "persist_proposal_or_clarification",
     )
-    compiled = build_preparation_graph()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", LangChainPendingDeprecationWarning)
+        compiled = build_preparation_graph()
     named = set(getattr(compiled, "nodes", {}))
     if not named:
         named = set(compiled.get_graph().nodes)

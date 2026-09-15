@@ -6,6 +6,10 @@ from pathlib import Path
 warnings.filterwarnings("ignore", module=r"langgraph\..*")
 warnings.filterwarnings("ignore", module=r"langchain_core\..*")
 
+from langchain_core._api.deprecation import LangChainPendingDeprecationWarning
+
+warnings.filterwarnings("ignore", category=LangChainPendingDeprecationWarning)
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
