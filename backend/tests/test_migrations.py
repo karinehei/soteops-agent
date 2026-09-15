@@ -1,6 +1,7 @@
 from sqlalchemy import inspect, text
 
 from app.core.db import create_db_engine
+from app.models import Approval
 from tests.conftest import TEST_SETTINGS
 
 REQUIRED_TABLES = {
@@ -18,6 +19,11 @@ REQUIRED_TABLES = {
     "instruction_chunks",
     "preparation_runs",
 }
+
+
+def test_approval_partial_unique_index_matches_migration() -> None:
+    names = {index.name for index in Approval.__table__.indexes}
+    assert "uq_approvals_proposal_approve" in names
 
 
 def test_pgvector_and_identity_tables_exist_after_migrations() -> None:

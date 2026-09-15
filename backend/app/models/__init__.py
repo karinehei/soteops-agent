@@ -4,7 +4,18 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -166,6 +177,14 @@ class Proposal(Base):
 
 class Approval(Base):
     __tablename__ = "approvals"
+    __table_args__ = (
+        Index(
+            "uq_approvals_proposal_approve",
+            "proposal_id",
+            unique=True,
+            postgresql_where=text("decision = 'approve'"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     proposal_id: Mapped[UUID] = mapped_column(ForeignKey("proposals.id"), index=True)
