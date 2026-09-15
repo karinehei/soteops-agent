@@ -93,6 +93,17 @@ def test_citation_membership_strips_invented_ids() -> None:
     assert invented == ["SYN-OHJE-KEKSITTY-01-v1#0"]
 
 
+def test_fake_explain_parses_versioned_source_ids() -> None:
+    llm = FakeLLMProvider()
+    prompt = (
+        "source_id=SYN-OHJE-VAKITUINEN-01-v1#0 "
+        "document_id=SYN-OHJE-VAKITUINEN-01-v1 SYNTHETIC=SYNTHETIC excerpt=ohje"
+    )
+    result = llm.complete_structured(prompt, ExplanationResult, purpose="explain")
+    assert result.evidence_missing is False
+    assert result.cited_source_ids == ["SYN-OHJE-VAKITUINEN-01-v1#0"]
+
+
 def test_fake_explain_without_evidence_does_not_invent_support() -> None:
     llm = FakeLLMProvider()
     result = llm.complete_structured("NO_EVIDENCE", ExplanationResult, purpose="explain")

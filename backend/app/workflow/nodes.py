@@ -238,7 +238,7 @@ def persist_proposal_or_clarification(state: PrepState) -> dict[str, Any]:
         rule_violations=state.rule_violations,
         explanation_text=state.explanation_text,
         clarification_draft=state.clarification_draft,
-        source_references=state.source_references
+        source_references=_source_references_for_reviewer(state)
         + [{"policy_version": context.policy.version, "source": context.policy.source}],
         provider_metadata={
             **state.provider_metadata,
@@ -272,6 +272,13 @@ def persist_proposal_or_clarification(state: PrepState) -> dict[str, Any]:
         },
     )
     return {"current_node": "persist_proposal_or_clarification"}
+
+
+def _source_references_for_reviewer(state: PrepState) -> list[dict[str, Any]]:
+    """Store membership-checked citations, or retrieved evidence if the model cited none."""
+    if state.source_references:
+        return list(state.source_references)
+    return list(state.retrieved)
 
 
 def persist_failure(state: PrepState, error: ProviderError) -> None:

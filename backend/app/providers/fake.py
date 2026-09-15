@@ -151,7 +151,7 @@ class FakeLLMProvider:
         return result
 
     def _explain(self, prompt: str) -> dict[str, Any]:
-        retrieved = re.findall(r"source_id=([A-Z0-9#@.\-]+)", prompt)
+        retrieved = re.findall(r"source_id=([A-Za-z0-9#@.\-]+)", prompt)
         missing_evidence = "NO_EVIDENCE" in prompt or not retrieved
         cited = list(dict.fromkeys(retrieved))
         if self.fail_mode == "invent_citations":
