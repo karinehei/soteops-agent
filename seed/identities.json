@@ -1,0 +1,39 @@
+{
+  "disclaimer": "Synthetic demo identities only. Not real people, employers, or systems.",
+  "organizations": [
+    {
+      "slug": "synteettinen-demo-org",
+      "name": "Synteettinen Demo-organisaatio"
+    }
+  ],
+  "users": [
+    {
+      "email": "aino.esimerkki@demo.invalid",
+      "display_name": "Aino Esimerkki",
+      "role": "requester",
+      "organization_slug": "synteettinen-demo-org"
+    },
+    {
+      "email": "ville.valvoja@demo.invalid",
+      "display_name": "Ville Valvoja",
+      "role": "reviewer",
+      "organization_slug": "synteettinen-demo-org"
+    },
+    {
+      "email": "outi.operaattori@demo.invalid",
+      "display_name": "Outi Operaattori",
+      "role": "operator",
+      "organization_slug": "synteettinen-demo-org"
+    }
+  ],
+  "access_targets": [
+    {
+      "slug": "demo-hr-testi",
+      "name": "DemoHR testi"
+    },
+    {
+      "slug": "demo-talous-testi",
+      "name": "DemoTalous testi"
+    }
+  ]
+}

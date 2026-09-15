@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  LLM_PROVIDER: fake
+  ENVIRONMENT: ci
+  LOG_LEVEL: INFO
+  MOCK_INTEGRATION_URL: http://127.0.0.1:8001
+  CORS_ORIGINS: http://127.0.0.1:3000
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write
+    env:
+      DATABASE_URL: postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops
+      POSTGRES_USER: soteops
+      POSTGRES_PASSWORD: soteops
+      POSTGRES_DB: soteops
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.6-pg17
+        env:
+          POSTGRES_USER: soteops
+          POSTGRES_PASSWORD: soteops
+          POSTGRES_DB: soteops
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U soteops -d soteops"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Verify lockfile
+        run: uv lock --check
+
+      - name: Install dependencies
+        run: uv sync --locked --all-packages --group dev
+
+      - name: Format
+        run: uv run ruff format --check backend mock-integration
+
+      - name: Lint
+        run: uv run ruff check backend mock-integration
+
+      - name: Type check
+        run: uv run mypy backend/app mock-integration/mock_integration
+
+      - name: Apply migrations
+        working-directory: backend
+        run: uv run alembic upgrade head
+
+      - name: Check migrations are current
+        working-directory: backend
+        run: uv run alembic check
+
+      - name: Test
+        run: >
+          uv run pytest
+          --junitxml=junit.xml
+          --cov
+          --cov-report=term-missing
+          --cov-report=xml
+
+      - name: Upload test artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-test-results
+          path: |
+            junit.xml
+            coverage.xml
+          if-no-files-found: error
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Reject remote font fetches
+        working-directory: .
+        run: |
+          if grep -R -n -E 'next/font/google|fonts\.googleapis\.com|fonts\.gstatic\.com' frontend/src frontend/next.config.ts frontend/package.json; then
+            echo "Remote font references are not allowed."
+            exit 1
+          fi
+
+      - name: Production build
+        run: npm run build

@@ -1,0 +1,104 @@
+# Setup (WSL / Linux)
+
+Local only. Do not deploy this prototype or point it at real identity systems.
+
+## Prerequisites
+
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/)
+- Node.js 20.9+ (22 LTS recommended)
+- Docker Engine with Compose v2
+- Git
+
+On WSL2, run the following from the repository root, for example `/mnt/d/soteops-agent`.
+
+## Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Replace every placeholder in `.env` with local synthetic values. Do not reuse production passwords or real directory credentials. Compose reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` from `.env`. The API reads `DATABASE_URL`.
+
+Example local-only values (not for any real system):
+
+```bash
+POSTGRES_USER=soteops
+POSTGRES_PASSWORD=soteops
+POSTGRES_DB=soteops
+POSTGRES_HOST_PORT=5432
+DATABASE_URL=postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops
+```
+
+## Start PostgreSQL with pgvector
+
+If `docker compose up` cannot bind `5432`, set `POSTGRES_HOST_PORT` (and the same port in `DATABASE_URL`). Do not stop containers that belong to other projects.
+
+WSL2 DNS sometimes fails to resolve PyPI or npm (`Resolving timed out`) even when IPv4 HTTPS works. In that case run `uv`/`npm` from Windows, or add IPv4 entries for `pypi.org`, `files.pythonhosted.org`, and `registry.npmjs.org` in WSL `/etc/hosts`.
+
+```bash
+docker compose up -d postgres
+docker compose ps
+```
+
+## Python workspace
+
+This repository uses **uv** as the only Python package manager. Install from the committed lockfile:
+
+```bash
+uv sync --locked --all-packages --group dev
+```
+
+Apply migrations and load synthetic identities:
+
+```bash
+uv run --directory backend alembic upgrade head
+uv run soteops-seed
+```
+
+Run the API and mock receiver:
+
+```bash
+uv run uvicorn app.main:create_app --factory --app-dir backend --host 127.0.0.1 --port 8000
+uv run uvicorn mock_integration.main:create_app --factory --app-dir mock-integration --host 127.0.0.1 --port 8001
+```
+
+Health and readiness:
+
+```bash
+curl -sS http://127.0.0.1:8000/health
+curl -sS http://127.0.0.1:8000/ready
+```
+
+## Frontend
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://127.0.0.1:3000`. The UI uses system fonts and must not fetch Google Fonts.
+
+## Checks
+
+```bash
+uv lock --check
+uv run ruff format --check backend mock-integration
+uv run ruff check backend mock-integration
+uv run mypy backend/app mock-integration/mock_integration
+uv run pytest --junitxml=junit.xml --cov --cov-report=term-missing
+cd frontend && npm ci && npm run lint && npm run typecheck && npm run build
+```
+
+Integration tests require Postgres on `127.0.0.1:5432` after migrations. CI uses fake model providers only and does not call cloud AI.
+
+## Optional Compose stack
+
+After `.env` is filled:
+
+```bash
+docker compose up --build
+```
+
+API `http://127.0.0.1:8000`, mock integration `http://127.0.0.1:8001`, web `http://127.0.0.1:3000`.

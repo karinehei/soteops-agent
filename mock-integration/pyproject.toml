@@ -1,0 +1,16 @@
+[project]
+name = "soteops-mock-integration"
+version = "0.1.0"
+description = "Simulated downstream receiver. Creates request records, not accounts."
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi[standard-no-fastapi-cloud-cli]>=0.141.1,<0.142",
+  "pydantic-settings>=2.10.1,<3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mock_integration"]
