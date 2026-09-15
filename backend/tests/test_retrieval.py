@@ -9,10 +9,12 @@ from app.models import (
     InstructionDocument,
     PreparationRun,
     PreparationRunStatus,
+    RequestStatus,
     Submission,
 )
 from app.providers.fake import FakeLLMProvider
 from app.retrieval.retrieve import retrieve_instructions
+from app.rules.transitions import as_status
 from app.schemas.requests import RequestWrite
 from app.services.proposals import interrupt_stale_runs, prepare_proposal
 from app.services.requests import create_request
@@ -119,9 +121,7 @@ def test_preparation_uses_fake_provider_and_cannot_mutate_downstream(isolated_db
         assert proposal.provider_metadata["measured_performance"] is False
         assert proposal.provider_metadata["durable_graph_resume"] is False
         assert "FAKE-TARJOAJA" in proposal.explanation_text
-        assert (
-            request.status.value == "ready_for_review" or str(request.status) == "ready_for_review"
-        )
+        assert as_status(request.status) == RequestStatus.READY_FOR_REVIEW
         assert (session.scalar(select(func.count()).select_from(Approval)) or 0) == before_approvals
         assert (
             session.scalar(select(func.count()).select_from(Submission)) or 0
@@ -177,10 +177,7 @@ def test_ambiguous_extraction_stays_unknown(isolated_db: None) -> None:
         proposal = request.current_proposal
         assert proposal is not None
         assert proposal.extracted_fields.get("employee_identifier") is None
-        assert str(request.status) in {
-            "needs_clarification",
-            "RequestStatus.NEEDS_CLARIFICATION",
-        } or (getattr(request.status, "value", str(request.status)) == "needs_clarification")
+        assert as_status(request.status) == RequestStatus.NEEDS_CLARIFICATION
     finally:
         session.close()
         engine.dispose()
@@ -207,7 +204,7 @@ def test_prompt_injection_cannot_approve_or_skip_rules(isolated_db: None) -> Non
             employment_type="vakituinen",
         )
         request = create_request(session, requester, payload)
-        assert getattr(request.status, "value", str(request.status)) == "needs_clarification"
+        assert as_status(request.status) == RequestStatus.NEEDS_CLARIFICATION
         proposal = request.current_proposal
         assert proposal is not None
         assert any(item["code"] == "prohibited_role" for item in proposal.rule_violations)
@@ -231,7 +228,7 @@ def test_timeout_is_visible_and_not_an_approval(isolated_db: None) -> None:
         prepare_proposal(session, request, requester.id, llm=llm)
         session.commit()
         session.refresh(request)
-        assert getattr(request.status, "value", str(request.status)) == "needs_clarification"
+        assert as_status(request.status) == RequestStatus.NEEDS_CLARIFICATION
         proposal = request.current_proposal
         assert proposal is not None
         assert (
