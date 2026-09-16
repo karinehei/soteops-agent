@@ -141,6 +141,10 @@ See committed JSON/Markdown under `docs/results/` after a successful test run. L
 | [`frontend/`](frontend/) | Next.js UI + Playwright |
 | [`mock-integration/`](mock-integration/) | Idempotent mock receiver |
 
+## License
+
+[MIT](LICENSE). This is a portfolio prototype with synthetic data only. The license does not grant affiliation with any real organization, or permission to use this software as a production control or identity-management system.
+
 ## Constraints
 
 Read [`AGENTS.md`](AGENTS.md) before contributing. Do not introduce real patient or employee data, production IAM, or claims of validated clinical or operational impact.
