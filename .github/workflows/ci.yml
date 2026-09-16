@@ -29,6 +29,59 @@ env:
   FORWARD_TIMEOUT_SECONDS: "3"
 
 jobs:
+  security:
+    name: security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install Python dependencies
+        run: uv sync --locked --all-packages --group dev
+
+      - name: Python dependency audit
+        run: |
+          # Residual findings require major upgrades blocked by AGENTS.md /
+          # pyproject pins (langgraph<1, pytest<9). Tracked in docs/security-review.md.
+          uv run pip-audit \
+            --ignore-vuln PYSEC-2026-83 \
+            --ignore-vuln PYSEC-2026-2573 \
+            --ignore-vuln PYSEC-2026-2574 \
+            --ignore-vuln PYSEC-2026-2194 \
+            --ignore-vuln PYSEC-2026-2575 \
+            --ignore-vuln PYSEC-2026-1845
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: npm audit (high and critical)
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   backend:
     name: backend
     runs-on: ubuntu-latest
@@ -116,6 +169,8 @@ jobs:
           path: |
             junit.xml
             coverage.xml
+            docs/results/evaluation-held-out-fake.json
+            docs/results/evaluation-held-out-fake.md
           if-no-files-found: ignore
 
   frontend:

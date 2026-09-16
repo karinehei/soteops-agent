@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 soteops-seed = "app.seed:main"
+soteops-eval = "app.evaluation.cli:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -26,6 +26,10 @@ class ProviderOutputError(ProviderError):
     category = "invalid_structured_output"
 
 
+class ProviderAuthError(ProviderError):
+    category = "auth_error"
+
+
 class LLMProvider(Protocol):
     name: str
     model: str

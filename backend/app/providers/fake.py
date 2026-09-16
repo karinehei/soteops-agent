@@ -37,6 +37,15 @@ _INJECTION = (
 )
 
 
+def _untrusted_user_text(prompt: str) -> str:
+    """Extract only the user-text block so form-field dumps are not treated as evidence."""
+    start = "BEGIN_UNTRUSTED_USER_TEXT"
+    end = "END_UNTRUSTED_USER_TEXT"
+    if start in prompt and end in prompt:
+        return prompt.split(start, 1)[1].split(end, 1)[0]
+    return prompt
+
+
 def tokenize(text: str) -> list[str]:
     return [token.lower() for token in _TOKEN.findall(text)]
 
@@ -109,7 +118,7 @@ class FakeLLMProvider:
         return self._explain(prompt)
 
     def _extract(self, prompt: str) -> dict[str, Any]:
-        source = prompt
+        source = _untrusted_user_text(prompt)
         lowered = source.lower()
         fields: dict[str, str | None] = {
             "employee_identifier": _first(_EMP.findall(source)),

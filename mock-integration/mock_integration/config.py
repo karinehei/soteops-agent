@@ -7,7 +7,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="forbid",
+        # Shared root .env also contains API/Compose keys; mock only reads its own fields.
+        extra="ignore",
         case_sensitive=False,
     )
 

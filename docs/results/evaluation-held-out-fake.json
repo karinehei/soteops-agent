@@ -1,0 +1,155 @@
+{
+  "dataset_version": "eval-v1",
+  "policy_version": "policy-v1",
+  "prompt_version": "prep-v1",
+  "provider": "fake",
+  "real_model_ran": false,
+  "cases_total": 15,
+  "cases_passed": 15,
+  "metrics": {
+    "field_extraction_accuracy": 1.0,
+    "missing_field_precision": 1.0,
+    "missing_field_recall": 1.0,
+    "retrieval_recall_at_k": 1.0,
+    "citation_validity_rate": 1.0,
+    "routing_accuracy": 1.0,
+    "approvable_accuracy": 1.0,
+    "latency_ms_p50": 44.71165699987978,
+    "latency_ms_p95": 53.37742199981221
+  },
+  "control_checks": {
+    "approval_boundary_passed": 10,
+    "approval_boundary_total": 10,
+    "duplicate_submission_passed": 3,
+    "duplicate_submission_total": 3
+  },
+  "limitations": [
+    "Synthetic demo corpus only — not clinically or operationally validated.",
+    "CI uses fake LLM/embedding providers; results are not measured model performance.",
+    "No real Ollama/cloud model was run for this report unless explicitly noted.",
+    "Time-savings hypothesis is not quantified; see manual comparison protocol in docs/evaluation.md.",
+    "Integration-failure controls are covered by dedicated pytest forwarding tests."
+  ],
+  "cases": [
+    {
+      "id": "eval-005",
+      "split": "held_out",
+      "category": "complete",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 51.40377699990495
+    },
+    {
+      "id": "eval-006",
+      "split": "held_out",
+      "category": "complete",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 46.09858699996039
+    },
+    {
+      "id": "eval-011",
+      "split": "held_out",
+      "category": "missing_fields",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 47.13543400021081
+    },
+    {
+      "id": "eval-012",
+      "split": "held_out",
+      "category": "missing_fields",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 44.65324499960843
+    },
+    {
+      "id": "eval-016",
+      "split": "held_out",
+      "category": "prohibited",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 49.8868049999146
+    },
+    {
+      "id": "eval-017",
+      "split": "held_out",
+      "category": "prohibited",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 44.71165699987978
+    },
+    {
+      "id": "eval-021",
+      "split": "held_out",
+      "category": "ambiguous",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 10.747197000000597
+    },
+    {
+      "id": "eval-022",
+      "split": "held_out",
+      "category": "ambiguous",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 9.475108000060573
+    },
+    {
+      "id": "eval-025",
+      "split": "held_out",
+      "category": "evidence",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 3.41794599989953
+    },
+    {
+      "id": "eval-026",
+      "split": "held_out",
+      "category": "evidence",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 1.1660620002658106
+    },
+    {
+      "id": "eval-029",
+      "split": "held_out",
+      "category": "prompt_injection",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 10.030845000073896
+    },
+    {
+      "id": "eval-030",
+      "split": "held_out",
+      "category": "prompt_injection",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 11.224198000036267
+    },
+    {
+      "id": "eval-032",
+      "split": "held_out",
+      "category": "integration",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 50.61991100001251
+    },
+    {
+      "id": "eval-033",
+      "split": "held_out",
+      "category": "integration",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 53.37742199981221
+    },
+    {
+      "id": "eval-035",
+      "split": "held_out",
+      "category": "complete",
+      "passed": true,
+      "failures": [],
+      "latency_ms": 58.68669600022258
+    }
+  ]
+}

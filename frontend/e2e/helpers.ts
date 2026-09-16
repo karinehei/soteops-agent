@@ -5,8 +5,8 @@ import { DEMO_SCENARIOS, DEMO_USERS } from "../src/lib/demo-scenarios";
 export async function login(page: Page, role: keyof typeof DEMO_USERS): Promise<void> {
   const user = DEMO_USERS[role];
   await page.goto("/login");
-  await page.getByLabel("Sähköposti").fill(user.email);
-  await page.getByLabel("Salasana").fill(user.password);
+  await page.locator("#email").fill(user.email);
+  await page.locator("#password").fill(user.password);
   await page.getByTestId("login-submit").click();
   await expect(page.getByTestId("current-user")).toContainText(user.displayName);
 }

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.models import InstructionChunk, InstructionDocument
 from app.providers import EmbeddingProvider
 from app.providers.fake import FakeEmbeddingProvider, tokenize
+from app.retrieval.embedding_index import upsert_index_meta
 
 DEFAULT_INSTRUCTIONS_PATH = Path(__file__).resolve().parents[3] / "seed" / "instructions.json"
 
@@ -42,6 +43,7 @@ def seed_instructions(
     payload: dict[str, Any],
     embedder: EmbeddingProvider | None = None,
 ) -> None:
+    """(Re)index instruction chunks. This is the supported reindex path when switching embedders."""
     embedder = embedder or FakeEmbeddingProvider()
     for item in payload["documents"]:
         document = session.scalar(
@@ -100,6 +102,7 @@ def seed_instructions(
                     embedding=vector,
                 )
             )
+    upsert_index_meta(session, embedder)
 
 
 def load_instructions_payload(path: Path) -> dict[str, Any]:

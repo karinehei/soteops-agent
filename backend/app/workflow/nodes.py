@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from app.models import AccessRequest, Proposal, RequestStatus
 from app.providers import PROMPT_VERSION, ProviderError
+from app.retrieval.embedding_index import assert_compatible
 from app.retrieval.retrieve import retrieve_instructions
 from app.rules.engine import evaluate_rules, is_approvable
 from app.rules.hashing import payload_hash
@@ -114,6 +115,7 @@ def retrieve_instructions_node(state: PrepState) -> dict[str, Any]:
     state = _coerce(state)
     _mark("retrieve_instructions")
     context = _ctx()
+    assert_compatible(context.session, context.embedder)
     query = " ".join(
         part
         for part in [

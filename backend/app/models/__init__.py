@@ -282,6 +282,20 @@ class InstructionChunk(Base):
     document: Mapped[InstructionDocument] = relationship(back_populates="chunks")
 
 
+class EmbeddingIndexMeta(Base):
+    """Singleton row describing which embedder produced instruction_chunks vectors."""
+
+    __tablename__ = "embedding_index_meta"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    model: Mapped[str] = mapped_column(String(128), nullable=False)
+    dimension: Mapped[int] = mapped_column(Integer, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
 class PreparationRun(Base):
     __tablename__ = "preparation_runs"
 

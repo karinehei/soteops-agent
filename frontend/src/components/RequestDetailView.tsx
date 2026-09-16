@@ -171,7 +171,10 @@ export function RequestDetailView({ requestId, user, mode }: RequestDetailViewPr
         onUpdated={(updated) => setRequest(updated)}
       />
 
-      <AuditTimeline requestId={requestId} />
+      <AuditTimeline
+        requestId={requestId}
+        refreshKey={`${request.status}:${request.current_submission?.status ?? ""}:${request.updated_at}`}
+      />
 
       <p>
         <Link href={mode === "reviewer" ? "/review" : "/requests"}>← Takaisin listaan</Link>

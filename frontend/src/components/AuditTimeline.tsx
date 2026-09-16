@@ -29,7 +29,13 @@ function sanitizeMetadata(metadata: Record<string, unknown>): Record<string, unk
   return Object.fromEntries(Object.entries(metadata).filter(([key]) => SAFE_METADATA_KEYS.has(key)));
 }
 
-export function AuditTimeline({ requestId }: { requestId: string }) {
+export function AuditTimeline({
+  requestId,
+  refreshKey,
+}: {
+  requestId: string;
+  refreshKey?: string;
+}) {
   const [events, setEvents] = useState<AuditOut[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +56,7 @@ export function AuditTimeline({ requestId }: { requestId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [requestId]);
+  }, [requestId, refreshKey]);
 
   if (error) {
     return <ErrorState message={error} onRetry={() => window.location.reload()} />;

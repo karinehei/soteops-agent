@@ -62,14 +62,18 @@ The mock exposes `POST /requests` with `Idempotency-Key`. The same key and paylo
 
 CI and the default local demo use deterministic **fake** LLM and embedding providers. Fake outputs are labelled `SYNTEETTINEN FAKE-TARJOAJA — ei mitattua mallisuorituskykyä` and must not be presented as measured model performance. Optional Ollama is local-only and must be enabled explicitly (`LLM_PROVIDER=ollama` and/or `EMBEDDING_PROVIDER=ollama` plus `OLLAMA_BASE_URL`).
 
+Optional **Azure OpenAI** adapters (`LLM_PROVIDER=azure_openai` / `EMBEDDING_PROVIDER=azure_openai`) require `AZURE_OPENAI_ENABLED=true` and deployment settings. Maturity: **Implemented**, **tested with mocked Azure responses**, **not live-verified**. See [`docs/azure-openai.md`](azure-openai.md). Fake evaluation metrics are not Azure model quality. Managed identity is not implemented.
+
 | Path | Inference |
 | --- | --- |
-| GitHub Actions (`LLM_PROVIDER=fake`, `EMBEDDING_PROVIDER=fake`) | Fake LLM and hash embeddings only. No Ollama, no paid/cloud models. |
+| GitHub Actions (`LLM_PROVIDER=fake`, `EMBEDDING_PROVIDER=fake`) | Fake LLM and hash embeddings only. No Ollama, no Azure, no paid/cloud models. |
 | Default Compose / local demo | Same fake path unless env is changed. |
 | `backend/tests/test_workflow.py` | Fake LLM unit tests. The Ollama timeout case is an httpx mock; it does not call a running model. |
+| `backend/tests/test_azure_openai.py` | Azure adapters with **httpx MockTransport** only — no live Azure. |
 | `backend/tests/test_retrieval.py` and request API tests | Full six-node graph against Postgres with fake providers. |
-| `soteops-seed` | Embeddings from the configured embedding provider (fake in CI). |
+| `soteops-seed` | Embeddings from the configured embedding provider (fake in CI). Tracks `embedding_index_meta`. |
 | Manual local Ollama | Real local `/api/chat` and/or `/api/embeddings` only when those providers are set to `ollama`. Not an evaluation harness. |
+| Manual Azure OpenAI | Only when explicitly enabled; live smoke test requires separate human authorization. |
 
 ## Packages
 

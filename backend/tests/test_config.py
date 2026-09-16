@@ -73,6 +73,31 @@ def test_settings_reject_unknown_embedding_provider() -> None:
         )
 
 
+def test_azure_openai_requires_explicit_enablement_and_deployments() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            environment="test",
+            database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+            mock_integration_url="http://127.0.0.1:8001",
+            llm_provider="azure_openai",
+            azure_openai_enabled=False,
+        )
+    assert "AZURE_OPENAI_ENABLED" in str(exc_info.value)
+    settings = Settings(
+        environment="test",
+        database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+        mock_integration_url="http://127.0.0.1:8001",
+        llm_provider="azure_openai",
+        embedding_provider="azure_openai",
+        azure_openai_enabled=True,
+        azure_openai_endpoint="https://example.openai.azure.com/",
+        azure_openai_api_key="test-key-not-real",
+        azure_openai_chat_deployment="chat-dep",
+        azure_openai_embedding_deployment="embed-dep",
+    )
+    assert settings.llm_provider == "azure_openai"
+
+
 def test_settings_reject_remote_forward_destination() -> None:
     with pytest.raises(ValidationError):
         Settings(

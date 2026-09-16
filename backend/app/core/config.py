@@ -22,10 +22,15 @@ class Settings(BaseSettings):
     environment: Literal["local", "test", "ci", "demo"] = "local"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     database_url: str
+    # Compose-only keys may live in the same .env; the API uses DATABASE_URL.
+    postgres_user: str | None = None
+    postgres_password: str | None = None
+    postgres_db: str | None = None
+    postgres_host_port: int | None = None
     mock_integration_url: AnyHttpUrl
     cors_origins: str = "http://127.0.0.1:3000"
-    llm_provider: Literal["fake", "ollama"] = "fake"
-    embedding_provider: Literal["fake", "ollama"] = "fake"
+    llm_provider: Literal["fake", "ollama", "azure_openai"] = "fake"
+    embedding_provider: Literal["fake", "ollama", "azure_openai"] = "fake"
     ollama_base_url: AnyHttpUrl | None = Field(default=None)
     ollama_llm_model: str = "llama3.2"
     ollama_embed_model: str = "nomic-embed-text"
@@ -43,6 +48,14 @@ class Settings(BaseSettings):
     session_ttl_hours: int = 12
     cookie_secure: bool = False
     policy_file: str | None = None
+    # Azure OpenAI — opt-in only. Managed identity is not implemented in this slice.
+    azure_openai_enabled: bool = False
+    azure_openai_endpoint: AnyHttpUrl | None = None
+    azure_openai_api_key: str | None = None
+    azure_openai_chat_deployment: str | None = None
+    azure_openai_embedding_deployment: str | None = None
+    azure_openai_embedding_dimensions: int | None = None
+    azure_openai_max_completion_tokens: int = 2048
 
     @field_validator("database_url")
     @classmethod
@@ -79,6 +92,38 @@ class Settings(BaseSettings):
             raise ValueError("OLLAMA_BASE_URL is required when LLM_PROVIDER=ollama")
         if self.embedding_provider == "ollama" and self.ollama_base_url is None:
             raise ValueError("OLLAMA_BASE_URL is required when EMBEDDING_PROVIDER=ollama")
+        azure_selected = (
+            self.llm_provider == "azure_openai" or self.embedding_provider == "azure_openai"
+        )
+        if azure_selected and not self.azure_openai_enabled:
+            raise ValueError(
+                "AZURE_OPENAI_ENABLED=true is required when LLM_PROVIDER or "
+                "EMBEDDING_PROVIDER is azure_openai (no silent fallback)"
+            )
+        if self.azure_openai_enabled or azure_selected:
+            if self.azure_openai_endpoint is None:
+                raise ValueError("AZURE_OPENAI_ENDPOINT is required when Azure OpenAI is enabled")
+            if not self.azure_openai_api_key:
+                raise ValueError("AZURE_OPENAI_API_KEY is required when Azure OpenAI is enabled")
+            if self.llm_provider == "azure_openai" and not self.azure_openai_chat_deployment:
+                raise ValueError(
+                    "AZURE_OPENAI_CHAT_DEPLOYMENT is required when LLM_PROVIDER=azure_openai"
+                )
+            if (
+                self.embedding_provider == "azure_openai"
+                and not self.azure_openai_embedding_deployment
+            ):
+                raise ValueError(
+                    "AZURE_OPENAI_EMBEDDING_DEPLOYMENT is required when "
+                    "EMBEDDING_PROVIDER=azure_openai"
+                )
+        if (
+            self.azure_openai_embedding_dimensions is not None
+            and self.azure_openai_embedding_dimensions < 1
+        ):
+            raise ValueError("AZURE_OPENAI_EMBEDDING_DIMENSIONS must be >= 1")
+        if self.azure_openai_max_completion_tokens < 1:
+            raise ValueError("AZURE_OPENAI_MAX_COMPLETION_TOKENS must be >= 1")
         if self.llm_max_retries < 0:
             raise ValueError("LLM_MAX_RETRIES must be >= 0")
         if self.retrieval_top_k < 1:

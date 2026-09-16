@@ -18,6 +18,7 @@ REQUIRED_TABLES = {
     "instruction_documents",
     "instruction_chunks",
     "preparation_runs",
+    "embedding_index_meta",
 }
 
 
