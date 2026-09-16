@@ -12,19 +12,16 @@ from sqlalchemy.orm import Session
 from app.auth.passwords import hash_password, verify_password
 from app.core.config import load_settings
 from app.core.db import create_db_engine, create_session_factory
+from app.core.paths import REPO_ROOT, resolve_repo_file
 from app.models import AccessTarget, Organization, User, UserRole
 from app.providers.factory import get_embedder
-from app.retrieval.ingest import (
-    default_instructions_path,
-    load_instructions_payload,
-    seed_instructions,
-)
+from app.retrieval.ingest import load_instructions_payload, seed_instructions
 
 logger = logging.getLogger(__name__)
 
 
 def default_seed_path() -> Path:
-    return Path(__file__).resolve().parents[2] / "seed" / "identities.json"
+    return REPO_ROOT / "seed" / "identities.json"
 
 
 def load_seed_payload(path: Path) -> dict[str, Any]:
@@ -81,16 +78,14 @@ def seed_identities(session: Session, payload: dict[str, Any]) -> None:
 
 def main() -> None:
     settings = load_settings()
-    seed_path = Path(settings.seed_file) if settings.seed_file else default_seed_path()
+    seed_path = resolve_repo_file(settings.seed_file, "seed", "identities.json")
     payload = load_seed_payload(seed_path)
     engine = create_db_engine(settings.database_url)
     session_factory = create_session_factory(engine)
     with session_factory() as session:
         seed_identities(session, payload)
-        instructions_path = (
-            Path(settings.instructions_file)
-            if settings.instructions_file
-            else default_instructions_path()
+        instructions_path = resolve_repo_file(
+            settings.instructions_file, "seed", "instructions.json"
         )
         seed_instructions(
             session,

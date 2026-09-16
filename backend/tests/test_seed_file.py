@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 
+from app.core.paths import REPO_ROOT, resolve_repo_file
+from app.seed import default_seed_path
+
 SEED_PATH = Path(__file__).resolve().parents[2] / "seed" / "identities.json"
 INSTRUCTIONS_PATH = Path(__file__).resolve().parents[2] / "seed" / "instructions.json"
 
@@ -48,3 +51,17 @@ def test_instructions_are_synthetic_versioned_and_labelled() -> None:
         assert item["version"]
         assert item["valid_from"]
         assert "SYNTHETIC" in item["title"] or "SYNTHETIC" in item["body"]
+
+
+def test_relative_seed_file_resolves_when_cwd_is_backend(monkeypatch) -> None:
+    monkeypatch.chdir(REPO_ROOT / "backend")
+    path = resolve_repo_file("seed/identities.json", "seed", "identities.json")
+    assert path == default_seed_path().resolve()
+    assert path.is_file()
+
+
+def test_absolute_seed_file_is_kept(tmp_path) -> None:
+    custom = tmp_path / "custom-identities.json"
+    custom.write_text("{}", encoding="utf-8")
+    path = resolve_repo_file(str(custom), "seed", "identities.json")
+    assert path == custom

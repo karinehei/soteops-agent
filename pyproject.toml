@@ -3,6 +3,7 @@ name = "soteops-agent"
 version = "0.1.0"
 description = "Finnish-language synthetic access-request preparation prototype."
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 dependencies = [
   "soteops-backend",
