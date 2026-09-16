@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export function LoadingState({ label = "Ladataan…" }: { label?: string }) {
   return (
     <div className="feedback feedback--loading" role="status" aria-live="polite" data-testid="loading">
@@ -29,11 +31,20 @@ export function ErrorState({
   );
 }
 
-export function EmptyState({ title, message }: { title: string; message: string }) {
+export function EmptyState({
+  title,
+  message,
+  children,
+}: {
+  title: string;
+  message: string;
+  children?: ReactNode;
+}) {
   return (
     <div className="feedback feedback--empty" data-testid="empty-state">
       <h2>{title}</h2>
       <p>{message}</p>
+      {children}
     </div>
   );
 }

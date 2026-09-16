@@ -49,8 +49,9 @@ export function ReviewActions({ request, proposal, onUpdated }: ReviewActionsPro
   }
 
   return (
-    <section className="card" aria-labelledby="review-actions-heading" data-testid="review-actions">
+    <section className="card card--action" aria-labelledby="review-actions-heading" data-testid="review-actions">
       <h2 id="review-actions-heading">Tarkastajan toimet</h2>
+      <p className="help">Hyväksyntä sitoo alla olevan ehdotuksen tarkan tiivisteen.</p>
       <div className="field">
         <label htmlFor="review-comment">Kommentti (valinnainen)</label>
         <textarea

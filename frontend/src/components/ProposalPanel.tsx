@@ -4,6 +4,42 @@ import { isApprovable } from "@/lib/processing-state";
 
 const FAKE_LABEL = "SYNTEETTINEN FAKE-TARJOAJA";
 
+function asText(value: unknown): string | null {
+  return typeof value === "string" && value.trim() !== "" ? value : null;
+}
+
+function SourceReferenceCard({ source }: { source: Record<string, unknown> }) {
+  const title =
+    asText(source.title) ?? asText(source.source_id) ?? asText(source.source) ?? "Lähde";
+  const version = asText(source.version);
+  const excerpt = asText(source.excerpt);
+  const label = asText(source.synthetic_label);
+  const documentId = asText(source.document_id);
+  const validFrom = asText(source.valid_from);
+  const validTo = asText(source.valid_to);
+  const known =
+    asText(source.title) ||
+    asText(source.source_id) ||
+    asText(source.excerpt) ||
+    asText(source.document_id);
+
+  return (
+    <article className="source-card">
+      <h3>{title}</h3>
+      <p className="muted small">
+        {label ? `${label} · ` : null}
+        {version ? `versio ${version}` : null}
+        {documentId ? ` · ${documentId}` : null}
+        {validFrom ? ` · ${validFrom}` : null}
+        {validTo ? `–${validTo}` : null}
+      </p>
+      {excerpt ? <p>{excerpt}</p> : null}
+      <p className="help">Ohje on näyttöä tarkastajalle, ei valtuutus.</p>
+      {!known ? <pre className="source-json">{JSON.stringify(source, null, 2)}</pre> : null}
+    </article>
+  );
+}
+
 export function ProposalPanel({
   proposal,
   showApprovalEligibility = false,
@@ -12,6 +48,7 @@ export function ProposalPanel({
   showApprovalEligibility?: boolean;
 }) {
   const eligible = isApprovable(proposal);
+  const hasFindings = proposal.missing_fields.length > 0 || proposal.rule_violations.length > 0;
   const providerLabel =
     typeof proposal.provider_metadata.llm_label === "string"
       ? proposal.provider_metadata.llm_label
@@ -57,9 +94,12 @@ export function ProposalPanel({
         </dl>
       </section>
 
-      <section className="card" aria-labelledby="findings-heading">
+      <section
+        className={hasFindings ? "card card--warning" : "card card--ok"}
+        aria-labelledby="findings-heading"
+      >
         <h2 id="findings-heading">Puuttuvat tiedot ja sääntöhavainnot</h2>
-        {proposal.missing_fields.length === 0 && proposal.rule_violations.length === 0 ? (
+        {!hasFindings ? (
           <p>Ei puuttuvia kenttiä eikä estäviä sääntöhavaintoja.</p>
         ) : (
           <>
@@ -98,7 +138,7 @@ export function ProposalPanel({
           <ul className="source-list" data-testid="source-references">
             {proposal.source_references.map((ref, index) => (
               <li key={index}>
-                <pre className="source-json">{JSON.stringify(ref, null, 2)}</pre>
+                <SourceReferenceCard source={ref} />
               </li>
             ))}
           </ul>
@@ -123,13 +163,16 @@ export function ProposalPanel({
           Tämä on tarkalleen se snapshot, joka lähetetään mock-integraatioon hyväksynnän jälkeen.
           Se ei luo tiliä.
         </p>
-        <pre className="payload-preview" data-testid="downstream-payload">
-          {JSON.stringify(proposal.downstream_payload, null, 2)}
-        </pre>
         <p className="mono small">
           Tiiviste: {proposal.payload_hash} · Versio: {proposal.policy_version} · Revisio:{" "}
           {proposal.revision}
         </p>
+        <details className="details-block">
+          <summary>Näytä JSON-rakenne</summary>
+          <pre className="payload-preview" data-testid="downstream-payload">
+            {JSON.stringify(proposal.downstream_payload, null, 2)}
+          </pre>
+        </details>
       </section>
     </div>
   );
