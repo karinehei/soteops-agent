@@ -11,8 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import SessionDep, SettingsDep
 from app.auth.deps import CsrfDep, CurrentUser
+from app.core.config import DEMO_ENVIRONMENTS
 from app.models import AccessRequest, ApprovalDecision, AuditEvent, RequestStatus, User, UserRole
-from app.schemas.requests import ApprovalAction, RequestWrite
+from app.schemas.requests import ApprovalAction, ForwardAction, RequestWrite
 from app.services.approvals import decide, start_review
 from app.services.forwarding import current_submission, dispatch_request
 from app.services.requests import (
@@ -236,8 +237,20 @@ def forward_request(
     db: SessionDep,
     settings: SettingsDep,
     _: CsrfDep,
+    payload: ForwardAction | None = None,
 ) -> RequestOut:
-    return _to_out(dispatch_request(db, request_id, user, settings=settings), db)
+    fault = None
+    if payload is not None and payload.demo_fault is not None:
+        if settings.environment not in DEMO_ENVIRONMENTS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Demo fault modes are local-only",
+            )
+        fault = payload.demo_fault
+    return _to_out(
+        dispatch_request(db, request_id, user, settings=settings, fault=fault),
+        db,
+    )
 
 
 @router.get("/requests/{request_id}/audit")

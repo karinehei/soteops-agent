@@ -211,7 +211,7 @@ The graph stops after persist. It has no tools that approve, reject, or call moc
 4. Fake providers, LangGraph preparation graph, RAG ingest/retrieve **(done in this slice)**
 5. Review API + invalidation **(done in this slice)**
 6. mock-integration + idempotent forward/retry **(done in this slice)**
-7. Finnish Next.js UI for the eight-step path
-8. Remaining pytest + Playwright coverage for the full demo path
+7. Finnish Next.js UI for the eight-step path **(done in this slice)**
+8. Remaining pytest + Playwright coverage for the full demo path **(Playwright E2E in CI; extended pytest optional)**
 
 Stop here for review.

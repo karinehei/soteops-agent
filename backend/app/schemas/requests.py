@@ -1,7 +1,10 @@
 from datetime import date
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+
+DemoFaultMode = Literal["success", "fail-before", "lost-response", "unavailable"]
 
 
 class RequestWrite(BaseModel):
@@ -33,3 +36,11 @@ class LoginBody(BaseModel):
 
     email: str
     password: str
+
+
+class ForwardAction(BaseModel):
+    """Optional local demo fault injection for mock-integration forwarding."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    demo_fault: DemoFaultMode | None = None

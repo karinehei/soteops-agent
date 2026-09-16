@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { AppShell } from "@/components/AppShell";
+import { Providers } from "@/components/Providers";
 import { SyntheticDataBanner } from "@/components/SyntheticDataBanner";
 
 import "./globals.css";
@@ -15,8 +17,10 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="fi">
       <body>
-        <SyntheticDataBanner />
-        {children}
+        <Providers>
+          <SyntheticDataBanner />
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

@@ -17,4 +17,16 @@ CI and the default local demo use **fake** LLM and embedding providers. Fake fin
 7. Create a synthetic access request. The proposal shows extracted fields with input excerpts, deterministic rule findings, retrieved SYNTHETIC citations, and a fake-provider label. Human review is still required. An edit invalidates the previous proposal hash.
 8. A reviewer approves the exact proposal hash. `POST /requests/{id}/forward` sends the frozen payload to the mock with a stable idempotency key. Repeat forwards return the same mock record id. The mock does not create an account.
 
+## Web UI (Finnish)
+
+After `docker compose up --build` or local API + `npm run dev` in `frontend`:
+
+1. `http://127.0.0.1:3000` — independent prototype notice and labelled demo scenarios.
+2. `/login` — local demo session (not Entra ID). Seeded requester/reviewer/operator shortcuts.
+3. `/requests` — requester list and new-request form; operator sees all requests.
+4. `/requests/{id}` — original text, extracted fields, submission outcome, sanitized audit timeline.
+5. `/review` and `/review/{id}` — reviewer queue and proposal review with policy vs AI separation.
+
+Playwright E2E runs in GitHub Actions against the local stack with fake AI and synthetic seeds.
+
 Do not claim operational impact. Do not demo against real employees, patients, or IAM systems.
