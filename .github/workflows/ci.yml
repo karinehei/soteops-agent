@@ -25,6 +25,8 @@ env:
   EMBEDDING_PROVIDER: fake
   LLM_MAX_RETRIES: "2"
   RETRIEVAL_TOP_K: "4"
+  FORWARD_MAX_ATTEMPTS: "3"
+  FORWARD_TIMEOUT_SECONDS: "3"
 
 jobs:
   backend:
@@ -85,6 +87,18 @@ jobs:
       - name: Check migrations are current
         working-directory: backend
         run: uv run alembic check
+
+      - name: Start mock integration
+        run: |
+          uv run uvicorn mock_integration.main:create_app --factory --app-dir mock-integration --host 127.0.0.1 --port 8001 &
+          for _ in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8001/health >/dev/null; then
+              exit 0
+            fi
+            sleep 0.25
+          done
+          echo "mock integration did not become healthy"
+          exit 1
 
       - name: Test
         run: >

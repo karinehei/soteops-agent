@@ -106,15 +106,34 @@ def decide(
     session.add(approval)
     request.status = target
     if decision == ApprovalDecision.APPROVE:
+        session.flush()
         session.add(
             Submission(
                 approved_proposal_id=proposal.id,
+                approval_id=approval.id,
                 request_id=request.id,
                 idempotency_key=f"{request.id}:{proposal.payload_hash}",
+                payload_hash=proposal.payload_hash,
+                policy_version=proposal.policy_version,
+                revision=request.revision,
                 status=SubmissionStatus.PENDING,
                 attempt_count=0,
                 error_category=None,
             )
+        )
+        record_audit(
+            session,
+            event_type="submission_scheduled",
+            actor_id=reviewer.id,
+            request_id=request.id,
+            metadata={
+                "decision": decision.value,
+                "revision": request.revision,
+                "proposal_id": str(proposal.id),
+                "policy_version": proposal.policy_version,
+                "status": target.value,
+                "submission_status": SubmissionStatus.PENDING.value,
+            },
         )
     record_audit(
         session,

@@ -101,6 +101,8 @@ cd frontend && npm ci && npm run lint && npm run typecheck && npm run build
 
 Integration tests require Postgres on `127.0.0.1:5432` after migrations. CI sets `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake` and does not call Ollama or cloud AI. The Ollama adapter is covered by mocked timeout tests only. If port `5432` is already used by another project, set `POSTGRES_HOST_PORT` and `DATABASE_URL` to a free local port instead of stopping that project.
 
+GitHub Actions starts the mock integration on `127.0.0.1:8001` before pytest. Forwarding tests also drive the mock in-process. `FORWARD_MAX_ATTEMPTS` defaults to 3; a timeout after send is reconciled by idempotency-key lookup and does not mint a new key.
+
 ## Optional Compose stack
 
 After `.env` is filled:

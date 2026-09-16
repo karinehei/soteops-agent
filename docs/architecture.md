@@ -1,6 +1,6 @@
 # Architecture
 
-SoteOps Agent is a modular FastAPI monolith plus a small mock integration service. PostgreSQL with pgvector is the only datastore. Access-request domain, deterministic policy, human approval, and a bounded LangGraph preparation workflow are implemented. Mock forwarding is still later work.
+SoteOps Agent is a modular FastAPI monolith plus a small mock integration service. PostgreSQL with pgvector is the only datastore. Access-request domain, deterministic policy, human approval, bounded LangGraph preparation, and reliable mock forwarding are implemented. The mock stores a request record; it does not create accounts.
 
 ```text
 browser (Next.js, fi)
@@ -48,6 +48,16 @@ Progress is stored on `AccessRequest.status` and `preparation_runs`. A run left 
 
 User text and retrieved documents are untrusted. Prompt injection cannot change authorization, tools, or policy rules. Citation IDs are checked for membership in the retrieval set; a valid ID does not prove that the passage supports the claim. Similarity scores and model self-confidence are not shown as calibrated probabilities.
 
+## Forwarding
+
+Approval and submission scheduling are one database transaction: a valid approve inserts `Submission` with `idempotency_key = "{request_id}:{payload_hash}"` and status `pending`. That row is the durable outbox. The dispatcher is a separate application service, not a LangGraph node.
+
+Before the first send it re-checks the bound approval, current proposal revision, payload hash, and applicable policy version. The HTTP destination is only `MOCK_INTEGRATION_URL` (localhost / `mock-integration`). User text and model output cannot choose a URL. Raw payloads and credentials are not logged.
+
+A timeout after send is `unknown`, not failure. The dispatcher looks up the idempotency key on the mock before deciding. Retries reuse the same key until `FORWARD_MAX_ATTEMPTS` (default 3). Edits and resubmits are blocked while a submission is `pending`, `in_flight`, or `unknown`, and while the request is `forwarding` or `forwarded`.
+
+The mock exposes `POST /requests` with `Idempotency-Key`. The same key and payload return the same record. The same key with different content is `409`. Local-only `X-Mock-Fault` values: `success`, `fail-before`, `lost-response`, `unavailable`.
+
 ## Fake versus real inference
 
 CI and the default local demo use deterministic **fake** LLM and embedding providers. Fake outputs are labelled `SYNTEETTINEN FAKE-TARJOAJA — ei mitattua mallisuorituskykyä` and must not be presented as measured model performance. Optional Ollama is local-only and must be enabled explicitly (`LLM_PROVIDER=ollama` and/or `EMBEDDING_PROVIDER=ollama` plus `OLLAMA_BASE_URL`).
@@ -66,7 +76,7 @@ CI and the default local demo use deterministic **fake** LLM and embedding provi
 | Path | Role |
 | --- | --- |
 | `backend/` | FastAPI app, SQLAlchemy, Alembic, seed command, LangGraph preparation |
-| `mock-integration/` | Simulated receiver. Stores request records later; does not create accounts |
+| `mock-integration/` | Simulated receiver. Stores request records; does not create accounts |
 | `frontend/` | Next.js App Router shell, Finnish copy, system fonts |
 | `seed/` | Synthetic identities, policy, and Finnish instruction corpus |
 | `.github/workflows/` | GitHub Actions CI |

@@ -100,3 +100,6 @@ def test_illegal_transition_is_rejected() -> None:
 def test_review_to_approved_is_allowed() -> None:
     ensure_transition(RequestStatus.READY_FOR_REVIEW, RequestStatus.APPROVED)
     ensure_transition(RequestStatus.IN_REVIEW, RequestStatus.REJECTED)
+    ensure_transition(RequestStatus.APPROVED, RequestStatus.FORWARDING)
+    ensure_transition(RequestStatus.FORWARDING, RequestStatus.FORWARDED)
+    ensure_transition(RequestStatus.FORWARD_FAILED, RequestStatus.FORWARDING)

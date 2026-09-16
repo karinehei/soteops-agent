@@ -25,6 +25,8 @@ ALLOWED_TRANSITIONS: frozenset[tuple[RequestStatus, RequestStatus]] = frozenset(
         (RequestStatus.FORWARDING, RequestStatus.FORWARDED),
         (RequestStatus.FORWARDING, RequestStatus.FORWARD_FAILED),
         (RequestStatus.FORWARD_FAILED, RequestStatus.FORWARDING),
+        (RequestStatus.FORWARD_FAILED, RequestStatus.PREPARING),
+        (RequestStatus.FORWARDING, RequestStatus.PREPARING),
     }
 )
 
@@ -37,6 +39,14 @@ EDITABLE_STATUSES = frozenset(
         RequestStatus.REJECTED,
         RequestStatus.SUBMITTED,
         RequestStatus.PREPARING,
+        RequestStatus.FORWARD_FAILED,
+    }
+)
+
+SUBMISSION_BLOCKED_STATUSES = frozenset(
+    {
+        RequestStatus.FORWARDING,
+        RequestStatus.FORWARDED,
     }
 )
 

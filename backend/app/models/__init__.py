@@ -50,8 +50,12 @@ class ApprovalDecision(StrEnum):
 
 class SubmissionStatus(StrEnum):
     PENDING = "pending"
+    IN_FLIGHT = "in_flight"
+    UNKNOWN = "unknown"
     ACCEPTED = "accepted"
     FAILED = "failed"
+    EXHAUSTED = "exhausted"
+    CONFLICT = "conflict"
 
 
 class PreparationRunStatus(StrEnum):
@@ -207,12 +211,18 @@ class Submission(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     approved_proposal_id: Mapped[UUID] = mapped_column(ForeignKey("proposals.id"), index=True)
+    approval_id: Mapped[UUID] = mapped_column(ForeignKey("approvals.id"), index=True)
     request_id: Mapped[UUID] = mapped_column(ForeignKey("access_requests.id"), index=True)
     idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    policy_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[SubmissionStatus] = mapped_column(String(16), nullable=False)
     attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     downstream_reference: Mapped[str | None] = mapped_column(String(128), nullable=True)
     error_category: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

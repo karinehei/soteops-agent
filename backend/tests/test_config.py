@@ -73,6 +73,15 @@ def test_settings_reject_unknown_embedding_provider() -> None:
         )
 
 
+def test_settings_reject_remote_forward_destination() -> None:
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="test",
+            database_url="postgresql+psycopg://soteops:soteops@127.0.0.1:5432/soteops",
+            mock_integration_url="http://example.invalid:8001",
+        )
+
+
 def test_settings_reject_unknown_fields() -> None:
     with pytest.raises(ValidationError):
         Settings(

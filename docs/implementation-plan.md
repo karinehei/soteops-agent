@@ -1,6 +1,6 @@
 # SoteOps Agent — implementation plan
 
-Status: foundation, approval boundary, and bounded LangGraph preparation are implemented. Remaining MVP slices follow section 12. Do not claim the product hypothesis has been validated.
+Status: foundation, approval boundary, bounded LangGraph preparation, and mock forwarding are implemented. Remaining MVP slices follow section 12. Do not claim the product hypothesis has been validated.
 
 ## 1. Product
 
@@ -149,11 +149,12 @@ LangGraph owns only `preparing` (the six nodes in section 10) and stops before a
 
 - Create `DownstreamSubmission` when an approval becomes valid, before the HTTP call, with `idempotency_key = "{request_id}:{content_hash}"`.
 - Unique constraint on `idempotency_key` in both the monolith and mock-iam.
-- Mock-iam `PUT /request-records` is create-or-return: same key returns the existing record id and payload hash.
-- Retry on timeout, 5xx, or ambiguous “unknown outcome” uses the same key. Do not mint a new key for retries.
-- Mark `forwarded` only after the mock returns a record id for that key and payload hash. Otherwise `forward_failed`.
+- Mock `POST /requests` is create-or-return: same key and payload returns the existing record id and payload hash. Same key with different content is rejected.
+- Retry on timeout, 5xx, or ambiguous “unknown outcome” uses the same key. Do not mint a new key for retries. Timeouts are reconciled with `GET /requests?idempotency_key=`.
+- Mark `forwarded` only after the mock returns a record id for that key and payload hash, or lookup confirms the record. Otherwise `forward_failed` or `unknown`.
 - If the current proposal hash differs from the submission key, do not retry; require a new approval and a new key.
 - Mock-iam stores a request record only. It does not create accounts, credentials, or group memberships.
+- Edits are blocked while submission is pending, in flight, or unknown, and while the request is forwarding or forwarded.
 
 ## 10. Workflow and providers
 
@@ -208,8 +209,8 @@ The graph stops after persist. It has no tools that approve, reject, or call moc
 2. Auth, request CRUD, audit **(done in this slice)**
 3. Rules engine and proposal hashing **(done in this slice)**
 4. Fake providers, LangGraph preparation graph, RAG ingest/retrieve **(done in this slice)**
-5. Review API + invalidation **(done in this slice; forwarding still later)**
-6. mock-integration + idempotent forward/retry
+5. Review API + invalidation **(done in this slice)**
+6. mock-integration + idempotent forward/retry **(done in this slice)**
 7. Finnish Next.js UI for the eight-step path
 8. Remaining pytest + Playwright coverage for the full demo path
 

@@ -28,6 +28,8 @@ services:
       LLM_PROVIDER: ${LLM_PROVIDER:-fake}
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-fake}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://127.0.0.1:11434}
+      FORWARD_MAX_ATTEMPTS: ${FORWARD_MAX_ATTEMPTS:-3}
+      FORWARD_TIMEOUT_SECONDS: ${FORWARD_TIMEOUT_SECONDS:-3}
       SOTEOPS_SEED_FILE: /app/seed/identities.json
       SOTEOPS_INSTRUCTIONS_FILE: /app/seed/instructions.json
       DEMO_AUTH_ENABLED: ${DEMO_AUTH_ENABLED:-true}
@@ -39,6 +41,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mock-integration:
+        condition: service_started
 
   mock-integration:
     build:

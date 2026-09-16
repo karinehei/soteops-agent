@@ -21,6 +21,10 @@ ALLOWED_METADATA_KEYS = frozenset(
         "provider",
         "run_status",
         "source_ids",
+        "attempt_count",
+        "error_category",
+        "submission_status",
+        "downstream_reference",
     }
 )
 

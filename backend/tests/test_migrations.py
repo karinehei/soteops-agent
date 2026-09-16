@@ -1,7 +1,7 @@
 from sqlalchemy import inspect, text
 
 from app.core.db import create_db_engine
-from app.models import Approval
+from app.models import Approval, Submission
 from tests.conftest import TEST_SETTINGS
 
 REQUIRED_TABLES = {
@@ -24,6 +24,19 @@ REQUIRED_TABLES = {
 def test_approval_partial_unique_index_matches_migration() -> None:
     names = {index.name for index in Approval.__table__.indexes}
     assert "uq_approvals_proposal_approve" in names
+
+
+def test_submission_outbox_columns_are_present() -> None:
+    columns = {column.name for column in Submission.__table__.columns}
+    assert {
+        "approval_id",
+        "payload_hash",
+        "policy_version",
+        "revision",
+        "claimed_at",
+        "last_attempt_at",
+        "idempotency_key",
+    } <= columns
 
 
 def test_pgvector_and_identity_tables_exist_after_migrations() -> None:

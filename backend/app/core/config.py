@@ -1,9 +1,11 @@
 from typing import Literal
+from urllib.parse import urlparse
 
 from pydantic import AnyHttpUrl, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEMO_ENVIRONMENTS = frozenset({"local", "test", "ci", "demo"})
+ALLOWED_FORWARD_HOSTS = frozenset({"127.0.0.1", "localhost", "mock-integration", "::1"})
 
 
 class Settings(BaseSettings):
@@ -30,6 +32,8 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 8.0
     llm_max_retries: int = 2
     retrieval_top_k: int = 4
+    forward_timeout_seconds: float = 3.0
+    forward_max_attempts: int = 3
     seed_file: str | None = Field(default=None, validation_alias="SOTEOPS_SEED_FILE")
     instructions_file: str | None = Field(
         default=None, validation_alias="SOTEOPS_INSTRUCTIONS_FILE"
@@ -52,6 +56,17 @@ class Settings(BaseSettings):
             return "postgresql+psycopg://" + value.removeprefix("postgresql://")
         return value
 
+    @field_validator("mock_integration_url")
+    @classmethod
+    def validate_forward_destination(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        host = urlparse(str(value)).hostname
+        if host not in ALLOWED_FORWARD_HOSTS:
+            raise ValueError(
+                "MOCK_INTEGRATION_URL host must be a configured local destination "
+                "(127.0.0.1, localhost, ::1, or mock-integration)"
+            )
+        return value
+
     @model_validator(mode="after")
     def validate_demo_auth(self) -> "Settings":
         if self.demo_auth_enabled and self.environment not in DEMO_ENVIRONMENTS:
@@ -68,6 +83,10 @@ class Settings(BaseSettings):
             raise ValueError("LLM_MAX_RETRIES must be >= 0")
         if self.retrieval_top_k < 1:
             raise ValueError("RETRIEVAL_TOP_K must be >= 1")
+        if self.forward_max_attempts < 1:
+            raise ValueError("FORWARD_MAX_ATTEMPTS must be >= 1")
+        if self.forward_timeout_seconds <= 0:
+            raise ValueError("FORWARD_TIMEOUT_SECONDS must be > 0")
         return self
 
     @property

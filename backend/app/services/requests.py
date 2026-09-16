@@ -15,6 +15,7 @@ from app.rules.transitions import (
 )
 from app.schemas.requests import RequestWrite
 from app.services.audit import record_audit
+from app.services.forwarding import submission_blocks_edits
 from app.services.proposals import prepare_proposal
 
 
@@ -71,6 +72,14 @@ def edit_request(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Request cannot be edited in this status"
         )
+    if submission_blocks_edits(session, request):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Edits are blocked while a submission is pending, in flight, unknown, "
+                "or the request is forwarding/forwarded"
+            ),
+        )
     locked = session.execute(
         select(AccessRequest).where(AccessRequest.id == request.id).with_for_update()
     ).scalar_one()
@@ -99,6 +108,14 @@ def resubmit_request(session: Session, request: AccessRequest, owner: User) -> A
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Request cannot be resubmitted in this status",
+        )
+    if submission_blocks_edits(session, request):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Resubmit is blocked while a submission is pending, in flight, unknown, "
+                "or the request is forwarding/forwarded"
+            ),
         )
     locked = session.execute(
         select(AccessRequest).where(AccessRequest.id == request.id).with_for_update()
@@ -167,6 +184,9 @@ def list_requests(session: Session, user: User) -> list[AccessRequest]:
                     RequestStatus.IN_REVIEW,
                     RequestStatus.APPROVED,
                     RequestStatus.REJECTED,
+                    RequestStatus.FORWARDING,
+                    RequestStatus.FORWARDED,
+                    RequestStatus.FORWARD_FAILED,
                 ]
             )
         )
