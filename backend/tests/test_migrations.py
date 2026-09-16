@@ -38,6 +38,8 @@ def test_submission_outbox_columns_are_present() -> None:
         "last_attempt_at",
         "idempotency_key",
     } <= columns
+    index_names = {index.name for index in Submission.__table__.indexes}
+    assert "ix_submissions_payload_hash" in index_names
 
 
 def test_pgvector_and_identity_tables_exist_after_migrations() -> None:

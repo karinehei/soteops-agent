@@ -66,7 +66,7 @@ Review date: 2026-09-16. Versions: policy `policy-v1`, auth demo-only, forwardin
 
 ## CI release posture
 
-- Workflow permissions: `contents: read` at workflow level; artifact upload jobs add minimal extra permissions.
+- Workflow permissions: `contents: read` at workflow level; security job adds `pull-requests: read` so gitleaks-action can list PR commits; artifact upload jobs add minimal extra permissions.
 - Actions pinned to full commit SHAs with version comments.
 - No container publish or cloud deploy steps.
 - Tests are not skipped or weakened for green builds.

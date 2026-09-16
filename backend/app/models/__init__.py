@@ -214,7 +214,7 @@ class Submission(Base):
     approval_id: Mapped[UUID] = mapped_column(ForeignKey("approvals.id"), index=True)
     request_id: Mapped[UUID] = mapped_column(ForeignKey("access_requests.id"), index=True)
     idempotency_key: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
-    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     policy_version: Mapped[str] = mapped_column(String(64), nullable=False)
     revision: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[SubmissionStatus] = mapped_column(String(16), nullable=False)
