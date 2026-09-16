@@ -230,9 +230,9 @@ jobs:
       DEMO_AUTH_ENABLED: "true"
       SESSION_SECRET: ci-session-secret-not-production
       COOKIE_SECURE: "false"
-      POLICY_FILE: seed/policy/v1.json
-      SOTEOPS_SEED_FILE: seed/identities.json
-      SOTEOPS_INSTRUCTIONS_FILE: seed/instructions.json
+      POLICY_FILE: ${{ github.workspace }}/seed/policy/v1.json
+      SOTEOPS_SEED_FILE: ${{ github.workspace }}/seed/identities.json
+      SOTEOPS_INSTRUCTIONS_FILE: ${{ github.workspace }}/seed/instructions.json
       LLM_PROVIDER: fake
       EMBEDDING_PROVIDER: fake
       ENVIRONMENT: ci

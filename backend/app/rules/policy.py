@@ -8,6 +8,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.core.paths import resolve_repo_file
+
 
 class RoleCombination(BaseModel):
     job_role: str
@@ -42,5 +44,5 @@ def load_policy(path: Path | None = None) -> PolicyConfig:
 
 @lru_cache(maxsize=8)
 def current_policy(path: str | None = None) -> PolicyConfig:
-    resolved = path or os.environ.get("POLICY_FILE") or str(default_policy_path())
-    return load_policy(Path(resolved))
+    configured = path if path is not None else os.environ.get("POLICY_FILE")
+    return load_policy(resolve_repo_file(configured, "seed", "policy", "v1.json"))
