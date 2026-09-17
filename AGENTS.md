@@ -38,6 +38,7 @@ This work is inspired by publicly discussed public-sector workflow needs. It is 
 - CI: GitHub Actions (not GitLab CI)
 - Tests: pytest for backend and workflow; Playwright for the demo UI
 - Models: deterministic fake providers in CI; optional local Ollama for real-model demonstrations
+- Portfolio presentation: repository Markdown under `docs/walkthrough/` plus GIFs recorded from the local app (fake providers, synthetic data). This replaces public deployment. Do not configure Vercel, Render, Neon, Azure hosting, GitHub Pages, or public visitor workspaces.
 
 ## Authorization and workflow rules
 
@@ -51,7 +52,7 @@ This work is inspired by publicly discussed public-sector workflow needs. It is 
 
 ## Implementation discipline
 
-- Follow `docs/implementation-plan.md`. Keep this foundation slice free of cloud deployment, paid APIs, and real data.
+- Follow `docs/implementation-plan.md`. Keep this foundation slice free of cloud deployment, paid APIs, and real data. Recruiter presentation is the GitHub Markdown walkthrough, not a hosted public instance.
 - Preserve existing user changes. Do not drive-by refactor unrelated files.
 - Keep secrets out of git. Local model endpoints and database URLs belong in env files that are not committed with credentials.
 - Prefer deterministic rules and tests over prompt-only behavior wherever a decision is a control.
