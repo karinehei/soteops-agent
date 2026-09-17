@@ -63,6 +63,10 @@ class UniqueStore:
             record = self._records.get(idempotency_key)
             return record.model_copy() if record is not None else None
 
+    def snapshot(self) -> list[RecordResponse]:
+        with self._lock:
+            return [record.model_copy() for record in self._records.values()]
+
     def count(self) -> int:
         with self._lock:
             return len(self._records)

@@ -24,7 +24,7 @@ function SourceReferenceCard({ source }: { source: Record<string, unknown> }) {
     asText(source.document_id);
 
   return (
-    <article className="source-card">
+    <article className="source-card" data-testid={documentId ? `source-card-${documentId}` : undefined}>
       <h3>{title}</h3>
       <p className="muted small">
         {label ? `${label} · ` : null}

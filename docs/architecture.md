@@ -2,6 +2,8 @@
 
 SoteOps Agent is a modular FastAPI monolith plus a small mock integration service. PostgreSQL with pgvector is the only datastore. Access-request domain, deterministic policy, human approval, bounded LangGraph preparation, and reliable mock forwarding are implemented. The mock stores a request record; it does not create accounts.
 
+**Portfolio presentation:** recruiters read [`docs/walkthrough/`](walkthrough/README.md) on GitHub. Clips are recorded from this local stack with fake providers. That Markdown walkthrough replaces public hosting; the runtime boundaries below are unchanged.
+
 ```text
 browser (Next.js, fi)
         -> FastAPI monolith (:8000)

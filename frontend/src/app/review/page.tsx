@@ -20,7 +20,12 @@ export default function ReviewQueuePage() {
     void api
       .reviewQueue()
       .then(setItems)
-      .catch((err: Error) => setError(err instanceof ApiError ? err.message : "Jono epäonnistui"));
+      .catch((err: Error) => {
+        if (err instanceof ApiError && err.status === 401) {
+          return;
+        }
+        setError(err instanceof ApiError ? err.message : "Jono epäonnistui");
+      });
   }, [authLoading]);
 
   if (authLoading) {
@@ -40,22 +45,26 @@ export default function ReviewQueuePage() {
         </div>
       </div>
       {error ? <ErrorState message={error} /> : null}
-      {!items ? (
+      {error ? null : !items ? (
         <LoadingState label="Ladataan jonoa…" />
-      ) : items.length === 0 ? (
-        <EmptyState title="Jono tyhjä" message="Ei tarkastusta odottavia pyyntöjä." />
       ) : (
-        <ul className="request-list" data-testid="review-queue">
-          {items.map((item) => (
-            <li key={item.id}>
-              <RequestListCard
-                href={`/review/${item.id}`}
-                request={item}
-                extra={`rev ${item.revision}`}
-              />
-            </li>
-          ))}
-        </ul>
+        <div data-testid="review-queue">
+          {items.length === 0 ? (
+            <EmptyState title="Jono tyhjä" message="Ei tarkastusta odottavia pyyntöjä." />
+          ) : (
+            <ul className="request-list">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <RequestListCard
+                    href={`/review/${item.id}`}
+                    request={item}
+                    extra={`rev ${item.revision}`}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </main>
   );

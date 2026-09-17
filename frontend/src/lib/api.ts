@@ -10,6 +10,17 @@ import type {
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 const CSRF_COOKIE = "soteops_csrf";
 const CSRF_HEADER = "X-CSRF-Token";
+const AUTH_OPTIONAL_PATHS = new Set(["/auth/me", "/auth/login", "/auth/csrf"]);
+const API_ERROR_FI: Record<string, string> = {
+  "Not authenticated": "Istunto ei ole voimassa. Kirjaudu uudelleen.",
+  "Invalid credentials": "Sähköposti tai salasana on virheellinen.",
+};
+
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -48,7 +59,7 @@ function parseErrorMessage(body: unknown, fallback: string): string {
   }
   const detail = (body as { detail?: unknown }).detail;
   if (typeof detail === "string") {
-    return detail;
+    return API_ERROR_FI[detail] ?? detail;
   }
   if (Array.isArray(detail) && detail.length > 0) {
     const first = detail[0];
@@ -90,6 +101,9 @@ async function request<T>(
   const text = await response.text();
   const body = text ? (JSON.parse(text) as unknown) : null;
   if (!response.ok) {
+    if (response.status === 401 && !AUTH_OPTIONAL_PATHS.has(path)) {
+      unauthorizedHandler?.();
+    }
     throw new ApiError(parseErrorMessage(body, response.statusText), response.status);
   }
   return body as T;

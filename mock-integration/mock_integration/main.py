@@ -24,6 +24,18 @@ class ReadyOut(BaseModel):
     stores_accounts: bool
 
 
+class RecordSummary(BaseModel):
+    record_id: str
+    idempotency_key: str
+    stores_accounts: bool
+
+
+class RecordsOut(BaseModel):
+    count: int
+    stores_accounts: bool
+    records: list[RecordSummary]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.store = UniqueStore()
@@ -69,6 +81,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/ready", response_model=ReadyOut)
     def ready() -> ReadyOut:
         return ReadyOut(status="ok", stores_accounts=False)
+
+    @app.get("/records", response_model=RecordsOut)
+    def list_records() -> RecordsOut:
+        """Local-only inventory for walkthrough assertions. Does not list payloads."""
+        if resolved.environment not in DEMO_ENVIRONMENTS:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+        stored = _store(app).snapshot()
+        return RecordsOut(
+            count=len(stored),
+            stores_accounts=False,
+            records=[
+                RecordSummary(
+                    record_id=item.record_id,
+                    idempotency_key=item.idempotency_key,
+                    stores_accounts=item.stores_accounts,
+                )
+                for item in stored
+            ],
+        )
 
     @app.post(
         "/requests",

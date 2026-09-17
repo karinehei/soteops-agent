@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -12,7 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import type { MeResponse } from "@/lib/api-types";
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, setUnauthorizedHandler } from "@/lib/api";
 
 interface AuthContextValue {
   user: MeResponse | null;
@@ -48,6 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }, []);
+
+  useLayoutEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      router.replace("/login");
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [router]);
 
   useEffect(() => {
     let cancelled = false;
