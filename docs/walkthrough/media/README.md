@@ -1,6 +1,6 @@
 # Walkthrough media
 
-GIFs and posters from the local application. Filenames match [`../recording-plan.md`](../recording-plan.md).
+Recruiter-facing pages start at [`../README.md`](../README.md). This folder holds the GIFs and posters only. Filenames match [`../recording-plan.md`](../recording-plan.md).
 
 | File | Role |
 | --- | --- |

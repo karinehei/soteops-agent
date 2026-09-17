@@ -1,29 +1,42 @@
 # 5. Lost-response reconciliation
 
-**Status:** in-dispatch reconciliation recorded. A lingering **Tuntematon tulos** (`unknown`) screen is implemented in the backend but is **test-only** and is not in this GIF.
+Show a **simulated** lost downstream response that is reconciled **inside the same forwarding call**. The UI reaches **Vastaanotettu** without a parked unknown screen and without a second forward click.
 
-![Timeout reconciliation](media/05-timeout-reconciliation.gif)
+**Persona and start:** Requester creates **Alasvirran timeout onnistuneen käsittelyn jälkeen** (`/requests/new?scenario=downstream-timeout`: `EMP-5005`). Reviewer approves, sets demo fault **Kadonnut vastaus onnistuneen käsittelyn jälkeen**, then forwards once.
 
-**Caption:** One-click outcome after **Kadonnut vastaus onnistuneen käsittelyn jälkeen**: **Vastaanotettu**, attempts 1, one mock record id. **Simulated lost response; automatic reconciliation.** No intermediate unknown screen and no manual retry. Exactly-one-record is a capture assertion (`GET` by idempotency key), not something established solely by the visible mock id. Waiting periods are shortened; GIF duration is not measured application latency.
+![Reviewer forwards with lost-response demo fault and the submission panel shows Vastaanotettu and one mock record](media/05-timeout-reconciliation.gif)
 
-Retries reuse `{request_id}:{payload_hash}`. The mock does not create a second record for the same key. After `accepted`, the UI disables further forward clicks.
+[Static poster](media/05-timeout-reconciliation-poster.png)
 
-## What you would see
+## What the GIF shows
 
-1. Complete request from **Alasvirran timeout…** (`/requests/new?scenario=downstream-timeout`).
-2. Reviewer approves, then selects `lost-response` and forwards.
-3. Submission panel: **Vastaanotettu**, one **Mock-tietue**, one idempotency key.
+1. A complete request is prepared and the reviewer approves the proposal.
+2. Demo-vikatila is set to **Kadonnut vastaus onnistuneen käsittelyn jälkeen** (`lost-response`).
+3. One **Lähetä / yritä uudelleen**. Submission **Tila** becomes **Vastaanotettu**; **Mock-tietue** and **Idempotenssiavain** are shown. Overlay: simulated lost response; automatic reconciliation.
+4. There is no intermediate **Tuntematon tulos** / **Alasvirran tulos tuntematon** screen and no manual retry in this clip.
 
-This page does not show a screenshot of `unknown`. `test_stale_in_flight_is_recovered_as_unknown` covers that recovery without a demo control.
+## What this recording demonstrates
 
-## Personas
+The mock stores the record, then omits the HTTP body (204). The monolith looks up the same idempotency key `{request_id}:{payload_hash}` before returning to the browser. Retries would reuse that key; after `accepted` the UI disables further forward clicks (success lock, not a second-record proof).
 
-Requester to create; reviewer (or operator) to forward. Operator cannot approve.
+**Exactly one mock record** for that key is a **capture assertion** (lookup by idempotency key after the click), not something the visible id alone proves.
 
-## Evidence
+## Automated checks (not only the GIF)
 
-- Playwright: `frontend/e2e/demo-scenarios.spec.ts` (`downstream lost-response demo reconciles after forward`)
-- pytest: `test_commit_then_timeout_is_reconciled`, `test_concurrent_dispatchers_do_not_duplicate`
-- pytest (not UI): `test_stale_in_flight_is_recovered_as_unknown`
+- Playwright: [`frontend/e2e/demo-scenarios.spec.ts`](../../frontend/e2e/demo-scenarios.spec.ts) (`downstream lost-response demo reconciles after forward`)
+- pytest: [`test_commit_then_timeout_is_reconciled`](../../backend/tests/test_forwarding.py)
+- pytest: [`test_concurrent_dispatchers_do_not_duplicate`](../../backend/tests/test_forwarding.py)
+- pytest (not UI): [`test_stale_in_flight_is_recovered_as_unknown`](../../backend/tests/test_forwarding.py) — lingering `unknown` recovery; no demo button
 
-Recording steps: [`recording-plan.md`](recording-plan.md) §5.
+## Limitations
+
+`recover_stale_in_flight` has no demo control. Do not read this GIF as a two-step “unknown, then retry” flow. Fake providers. Waiting periods shortened.
+
+## Implementation
+
+- Fixture: [`frontend/src/lib/demo-scenarios.ts`](../../frontend/src/lib/demo-scenarios.ts) (`downstream-timeout`)
+- Dispatcher + reconcile: [`backend/app/services/forwarding.py`](../../backend/app/services/forwarding.py)
+- Demo fault control: [`frontend/src/components/SubmissionPanel.tsx`](../../frontend/src/components/SubmissionPanel.tsx)
+- Mock 204 / idempotency: [`mock-integration/mock_integration/main.py`](../../mock-integration/mock_integration/main.py)
+
+[Walkthrough overview](README.md) · Previous: [Conflicting instructions](04-conflicting-instructions.md) · Next: [Stale proposal](06-stale-proposal.md)

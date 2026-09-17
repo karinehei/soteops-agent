@@ -1,26 +1,42 @@
 # 1. Successful request
 
-**Status:** supported and recorded. Local capture, fake providers, installed Chrome.
+Show a complete synthetic request going through preparation, **human** approval of the exact proposal, and mock receipt. The mock stores a request record. It does not create an account.
 
-![Successful request](media/01-successful-request.gif)
+**Persona and start:** Requester `aino.esimerkki@demo.invalid` opens **Täydellinen vakituinen pyyntö** (`/requests/new?scenario=complete-permanent`: `EMP-1001`, `lukuoikeus`, `demo-hr-testi`). Reviewer `ville.valvoja@demo.invalid` approves. A requester session cannot approve.
 
-**Caption:** Requester prepares a complete request; reviewer approves the exact proposal; mock integration stores one record. **Mock record received — no account provisioned.** Waiting periods are shortened; GIF duration is not measured application latency.
+![Requester prepares a complete access request, reviewer approves the exact proposal, mock integration shows Vastaanotettu with no account provisioned](media/01-successful-request.gif)
 
-## What you would see
+[Static poster](media/01-successful-request-poster.png)
 
-1. Requester starts **Täydellinen vakituinen pyyntö** (`/requests/new?scenario=complete-permanent`).
-2. After **Lähetä valmisteltavaksi**, `/requests/{id}` shows extracted fields, empty findings, SYNTHETIC citations, and the fake-provider label. Status **Odottaa tarkastusta**.
-3. Reviewer opens `/review/{id}`, starts review, sees **Ehdotus kelpaa hyväksyntään nykyisten sääntöjen mukaan.**
-4. **Hyväksy tarkka ehdotus**, then **Lähetä / yritä uudelleen** (demo fault: success).
-5. Submission panel: **Vastaanotettu**, a mock record id, and an idempotency key.
+## What the GIF shows
 
-## Personas
+1. The requester submits **Lähetä valmisteltavaksi**. Status becomes **Odottaa tarkastusta**.
+2. The reviewer opens the case, starts **Aloita tarkastus**, and sees **Ehdotus kelpaa hyväksyntään nykyisten sääntöjen mukaan.**
+3. The reviewer clicks **Hyväksy tarkka ehdotus**.
+4. **Lähetä / yritä uudelleen** (demo fault **Onnistuminen**) yields **Vastaanotettu**, a **Mock-tietue** id, and an idempotency key.
+5. Overlay copy states mock receipt, not provisioning. The panel also says the mock does not create accounts or grant rights.
 
-Requester `aino.esimerkki@demo.invalid`, then reviewer `ville.valvoja@demo.invalid`. A requester session cannot approve.
+## What this recording demonstrates
 
-## Evidence
+A reviewer—not the model—approves a bound proposal snapshot. Downstream is a local mock that records the request. It is not IAM provisioning.
 
-- Playwright: `frontend/e2e/happy-path.spec.ts`
-- pytest: `test_reviewer_queue_and_happy_path_approve`, `test_successful_forward_creates_one_mock_record`
+## Automated checks (not only the GIF)
 
-Recording steps: [`recording-plan.md`](recording-plan.md) §1.
+- Playwright: [`frontend/e2e/happy-path.spec.ts`](../../frontend/e2e/happy-path.spec.ts) (`requester submit → reviewer approve → forward shows mock record`)
+- pytest: [`test_reviewer_queue_and_happy_path_approve`](../../backend/tests/test_access_requests.py)
+- pytest: [`test_successful_forward_creates_one_mock_record`](../../backend/tests/test_forwarding.py) — mock lookup `stores_accounts` is false
+- Recording capture also asserts one additional mock record and `stores_accounts=false`
+
+## Limitations
+
+Waiting periods are shortened. Fake LLM/embeddings were used. This is not a real downstream system.
+
+## Implementation
+
+- Fixture: [`frontend/src/lib/demo-scenarios.ts`](../../frontend/src/lib/demo-scenarios.ts) (`complete-permanent`)
+- Approval binding: [`backend/app/services/approvals.py`](../../backend/app/services/approvals.py)
+- Mock copy: [`frontend/src/components/SubmissionPanel.tsx`](../../frontend/src/components/SubmissionPanel.tsx)
+- Mock store: [`mock-integration/mock_integration/store.py`](../../mock-integration/mock_integration/store.py)
+- Policy: [`seed/policy/v1.json`](../../seed/policy/v1.json)
+
+[Walkthrough overview](README.md) · Next: [Missing end date](02-missing-end-date.md)
