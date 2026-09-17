@@ -5,9 +5,11 @@ import {
   ARTIFACT_ROOT,
   apiForRole,
   csrfHeaders,
+  expectEvidenceInViewport,
   getRequest,
   holdForReading,
   openRecordedSession,
+  revealInViewport,
   submitDemoScenario,
   waitForProcessingStatus,
   writeScenarioResult,
@@ -15,6 +17,7 @@ import {
 
 const SCENARIO_ID = "03-prohibited-access";
 const VIDEO_DIR = path.join(ARTIFACT_ROOT, SCENARIO_ID);
+const retrievalTopK = process.env.WALKTHROUGH_RETRIEVAL_TOP_K ?? "4";
 
 test("03 prohibited access: policy finding, queue exclusion, API reject", async ({
   browser,
@@ -27,10 +30,20 @@ test("03 prohibited access: policy finding, queue exclusion, API reject", async 
   try {
     requestId = await submitDemoScenario(requester.page, "prohibited-role");
     await waitForProcessingStatus(requester.page, /Odottaa täsmennystä/);
-    await expect(requester.page.getByTestId("rule-violations")).toContainText("Kielletty käyttöoikeus");
+    await expect(requester.page.getByTestId("rule-violations")).toContainText(
+      "Kielletty käyttöoikeus",
+    );
     await expect(requester.page.getByTestId("approval-eligibility")).toHaveCount(0);
     await expect(requester.page.getByTestId("approve-button")).toHaveCount(0);
-    await holdForReading(requester.page);
+    await requester.page.evaluate(() => window.scrollTo(0, 0));
+    await expect(requester.page.getByTestId("proposal-panel")).toContainText("EMP-3003");
+    await expect(requester.page.getByTestId("proposal-panel")).toContainText("tuotanto-superadmin");
+    await holdForReading(requester.page, 1_600);
+    const finding = requester.page.getByTestId("rule-violations");
+    await revealInViewport(finding);
+    await expect(finding).toContainText("Kielletty käyttöoikeus");
+    await expectEvidenceInViewport(requester.page, finding, 80);
+    await holdForReading(requester.page, 2_800);
   } finally {
     await requester.finalize();
   }
@@ -40,7 +53,9 @@ test("03 prohibited access: policy finding, queue exclusion, API reject", async 
     await reviewer.page.goto("/review");
     await expect(reviewer.page.getByTestId("review-queue")).toBeVisible();
     await expect(reviewer.page.getByTestId(`request-card-${requestId}`)).toHaveCount(0);
-    await holdForReading(reviewer.page);
+    await expect(reviewer.page.getByTestId("review-queue")).not.toContainText("EMP-3003");
+    await expect(reviewer.page.getByTestId("review-queue")).not.toContainText("tuotanto-superadmin");
+    await holdForReading(reviewer.page, 2_200);
   } finally {
     await reviewer.finalize();
   }
@@ -74,7 +89,8 @@ test("03 prohibited access: policy finding, queue exclusion, API reject", async 
     fixture: "prohibited-role",
     assertions: [
       "Requester UI shows Kielletty käyttöoikeus and no approve button",
-      "Request id is absent from /review queue",
+      "Kielletty käyttöoikeus finding was scrolled into the recorded viewport",
+      "Request id and EMP-3003 are absent from /review queue",
       "Reviewer POST /approve returns 409 Request is not awaiting review (API-only, not in video)",
     ],
     assertions_passed: true,
@@ -82,8 +98,11 @@ test("03 prohibited access: policy finding, queue exclusion, API reject", async 
     video_segments: [requesterVideo, reviewerVideo],
     planned_gif: "docs/walkthrough/media/03-prohibited-access.gif",
     limitation:
-      "The requester screen has no approve control. API 409 is recorded in this manifest, not in the video.",
+      "The requester screen has no approve control. API 409 is recorded in the capture result, not in the video. " +
+      "The later policy-violation 409 is not reached on this fixture.",
     notes:
-      "Video shows findings and queue exclusion only. Approve is rejected because the case is needs_clarification, so it is not awaiting review. The later policy-violation 409 is not reached on this fixture. Do not present a disabled button on the requester page.",
+      `Video shows identity (EMP-3003 / tuotanto-superadmin), the Kielletty finding in viewport, ` +
+      `and queue exclusion of that identity. Recapture stack RETRIEVAL_TOP_K=${retrievalTopK}; ` +
+      `this scenario does not depend on retrieval top_k.`,
   });
 });

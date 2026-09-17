@@ -148,6 +148,7 @@ Show that a määräaikainen / `kirjaaja` request without an end date is routed 
 
 - First proposal: `needs_clarification`, missing `end_date`, violation `temporary_requires_end_date`.
 - After correction: new revision, previous proposal invalidated (notice may say a previous approval is no longer valid even when none existed — that is current UI copy), status `ready_for_review`.
+- The GIF must show the corrected end date (`2026-12-31`), empty findings copy (**Ei puuttuvia kenttiä** / **Ei puuttuvia kenttiä eikä sääntöhavaintoja**), **and** the resulting status (**Odottaa tarkastusta**). Scroll those into the recorded viewport; do not treat off-screen DOM as visual evidence.
 - Do not show a reviewer approve unless that is a separate clip. This scenario stops at successful resubmit.
 
 ### Fixture
@@ -161,6 +162,7 @@ Show that a määräaikainen / `kirjaaja` request without an end date is routed 
 ### Tests
 
 - Playwright: `frontend/e2e/demo-scenarios.spec.ts` (`demo scenario: temporary-missing-end`) — asserts **Odottaa täsmennystä** and no `approval-eligibility` on the requester page
+- Playwright recording: `frontend/e2e-record/02-missing-end-date.spec.ts` — fills the end date, re-prepares, and asserts **Odottaa tarkastusta** plus empty findings in the recorded viewport
 - pytest: `backend/tests/test_rules.py::test_temporary_access_requires_end_date`
 - pytest: `backend/tests/test_access_requests.py::test_resubmit_creates_new_revision`
 
@@ -170,7 +172,7 @@ Show that a määräaikainen / `kirjaaja` request without an end date is routed 
 
 ### Blockers
 
-None. Correction after clarification is UI-supported; there is no Playwright test that fills `end_date` and asserts `ready_for_review`. If save does not clear the missing-field finding, do not keep a GIF that implies it did.
+None. If save does not clear the missing-field finding, do not keep a GIF that implies it did.
 
 ---
 
@@ -201,7 +203,7 @@ Do not claim the reviewer queue contains prohibited cases. Do not show a success
 - Approve control absent (requester) or disabled (reviewer-by-URL)
 - API `POST /requests/{id}/approve` returns `409` (`Request is not awaiting review`) because the case stays `needs_clarification` and never enters the review queue. The later `Policy violations must be resolved before approval` 409 is not reached on this fixture. That API 409 is capture-manifest evidence; it is **not** in the GIF.
 
-The recorded GIF shows the requester page (`tuotanto-superadmin`, **Odottaa täsmennystä**) and the reviewer queue (other ready cases). The **Kielletty käyttöoikeus** title is below the 1440×900 fold.
+The GIF must scroll until the full **Kielletty käyttöoikeus** finding and its explanation are in the 1440×900 viewport, hold that view long enough to read, and use it as the poster. If the reviewer queue is included, show the request identity first so an empty queue (or the absence of EMP-3003 / `tuotanto-superadmin`) is understandable. Another employee’s row alone does not demonstrate exclusion. The API 409 stays capture-manifest / test evidence; do not fabricate a UI error or claim the later policy-violation guard was exercised.
 
 ### Fixture
 
@@ -245,7 +247,7 @@ There is no separate `conflict` request status. The labelled demo fixture is als
 2. Scenario **Ristiriitaiset ohjeet** (`/requests/new?scenario=conflicting-instructions`).
 3. Submit. Status **Odottaa täsmennystä** (missing end date / `temporary_requires_end_date`).
 4. Scroll **Ohjelähteet ja versiot**.
-5. **Gate:** Playwright must assert both of these titles (or `document_id`s). The GIF may keep a single planned filename when both are in the DOM even if one has scrolled out of the 1440×900 viewport — document that limitation; do not fabricate the missing card:
+5. **Gate:** Playwright must scroll each card into the recorded viewport and assert both titles (or `document_id`s) **in frame**. DOM-only assertions do not satisfy the GIF. Show A then B sequentially, with enough excerpt text to see the difference. A longer GIF or clearly linked parts is allowed. Disclose `RETRIEVAL_TOP_K=8` when that override was used, and state whether it applied to the entire recording stack or only this scenario.
    - `Ristiriita A: kirjaaja ilman loppupäivää (SYNTHETIC)` (`SYN-OHJE-RISTIRIITA-A-01-v1`)
    - `Ristiriita B: kirjaaja vaatii loppupäivän (SYNTHETIC)` (`SYN-OHJE-RISTIRIITA-B-01-v1`)
 6. Each source card includes *Ohje on näyttöä tarkastajalle, ei valtuutus.*
@@ -259,7 +261,7 @@ There is no separate `conflict` request status. The labelled demo fixture is als
 
 ### Fixture
 
-`conflicting-instructions` plus corpus documents in `seed/instructions.json` (topics `conflict`). Retrieval test query is `kirjaaja loppupäivä demo-hr-testi` at `top_k=8`. Default app `RETRIEVAL_TOP_K` is **4** (`.env.example`, Compose default). Playwright does not assert that both documents rendered.
+`conflicting-instructions` plus corpus documents in `seed/instructions.json` (topics `conflict`). Retrieval test query is `kirjaaja loppupäivä demo-hr-testi` at `top_k=8`. Default app `RETRIEVAL_TOP_K` is **4** (`.env.example`, Compose default). The recording spec scrolls both documents into view. Clarification is caused by the missing end date; do not claim automatic conflict detection.
 
 ### APIs
 
@@ -278,7 +280,7 @@ There is no separate `conflict` request status. The labelled demo fixture is als
 
 ### Blockers
 
-If only one conflict document (or neither) appears at `RETRIEVAL_TOP_K=4`, **do not record a fabricated pair**. This capture used `RETRIEVAL_TOP_K=8` because both sources were absent at 4; that override is disclosed on the walkthrough page. The published GIF shows **Ristiriita B** in frame; **Ristiriita A** was DOM-asserted and scrolled out — not split, because no in-viewport A frame exists.
+If only one conflict document (or neither) appears at `RETRIEVAL_TOP_K=4`, **do not record a fabricated pair**. The 04 recapture used `RETRIEVAL_TOP_K=8` for that recording stack only, because both sources were absent at 4. The published GIF shows **Ristiriita A** then **Ristiriita B** in frame.
 
 ---
 

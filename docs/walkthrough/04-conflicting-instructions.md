@@ -1,10 +1,10 @@
 # 4. Conflicting instructions
 
-**Status:** recorded from the local stack. **Recording configuration: `RETRIEVAL_TOP_K=8`** (both conflict documents were absent at the default 4).
+**Status:** recorded from the local stack. **Recording configuration: `RETRIEVAL_TOP_K=8`** applied to the 04 recapture stack only (both conflict documents were absent at the default 4).
 
 ![Conflicting instructions](media/04-conflicting-instructions.gif)
 
-**Caption:** Clarification was triggered by the missing end date, not by automatic conflict detection or conflict-based routing. Retrieved instructions remain evidence. **Ristiriita B** is in the captured viewport. **Ristiriita A** was asserted in the DOM during recording but scrolled out of frame; it is not fabricated here. Waiting periods are shortened; GIF duration is not measured application latency.
+**Caption:** Clarification was triggered by the missing end date, not by automatic conflict detection or conflict-based routing. Retrieved instructions remain evidence. The GIF shows **Ristiriita A** then **Ristiriita B**, each with enough excerpt text to see the difference. Waiting periods are shortened; GIF duration is not measured application latency.
 
 This fixture is also missing an end date, so the request status is **Odottaa täsmennystä**, not a special “conflict review” state. It does not appear on the reviewer queue.
 
@@ -17,7 +17,7 @@ This fixture is also missing an end date, so the request status is **Odottaa tä
    - Ristiriita B (`SYN-OHJE-RISTIRIITA-B-01-v1`)
 4. Each card: *Ohje on näyttöä tarkastajalle, ei valtuutus.*
 
-Recording used `RETRIEVAL_TOP_K=8` because both sources were missing at the default 4. Playwright asserted both document ids; the GIF viewport shows **Ristiriita B**. **Ristiriita A** is not fabricated.
+Recording used `RETRIEVAL_TOP_K=8` on the 04 recapture stack only, because both sources were missing at the default 4. Both cards appear in the GIF.
 
 ## Personas
 

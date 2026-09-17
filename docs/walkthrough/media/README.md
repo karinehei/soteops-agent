@@ -26,4 +26,4 @@ Requires FFmpeg (`winget install Gyan.FFmpeg`, or set `FFMPEG_DIR`). Temporary f
 
 ## Provenance
 
-This set was converted from the 2026-09-17 capture: installed Chrome, fake LLM/embeddings, recording-stack `RETRIEVAL_TOP_K=8`.
+Tracked summary: [`provenance.md`](provenance.md). Capture-stage `gifs_generated=false` means videos only; conversion status is `artifacts/walkthrough/media-manifest.json`. `RETRIEVAL_TOP_K=8` applied to the original full stack (01, 05, 06) and to the 04 recapture stack; 02 and 03 recaptures used the default 4.

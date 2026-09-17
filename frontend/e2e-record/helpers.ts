@@ -1,4 +1,11 @@
-import { expect, type APIRequestContext, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import {
+  expect,
+  type APIRequestContext,
+  type Browser,
+  type BrowserContext,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -25,6 +32,32 @@ export function storageStatePath(role: "requester" | "reviewer"): string {
 
 export async function holdForReading(page: Page, ms = READING_PAUSE_MS): Promise<void> {
   await page.waitForTimeout(ms);
+}
+
+export async function revealInViewport(locator: Locator): Promise<void> {
+  const target = locator.first();
+  await expect(target).toBeVisible();
+  await target.evaluate((node: HTMLElement) => {
+    node.scrollIntoView({ block: "center", inline: "nearest" });
+  });
+}
+
+export async function expectEvidenceInViewport(
+  page: Page,
+  locator: Locator,
+  minVisiblePx = 72,
+): Promise<void> {
+  const box = await locator.first().boundingBox();
+  const viewport = page.viewportSize();
+  if (!box) {
+    throw new Error("Evidence element has no bounding box");
+  }
+  if (!viewport) {
+    throw new Error("Page has no viewport size");
+  }
+  expect(box.height).toBeGreaterThan(0);
+  expect(box.y + minVisiblePx).toBeLessThanOrEqual(viewport.height);
+  expect(box.y + box.height).toBeGreaterThan(0);
 }
 
 export async function expectBanner(page: Page): Promise<void> {

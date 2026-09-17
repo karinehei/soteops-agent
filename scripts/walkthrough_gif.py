@@ -71,37 +71,48 @@ SCENARIOS: dict[str, dict[str, Any]] = {
     "02-missing-end-date": {
         "gif": "02-missing-end-date.gif",
         "poster": "02-missing-end-date-poster.png",
-        "poster_from": "requester-result",
+        "poster_from": "requester-status",
         "visual_limitation": (
-            "Correction is a held frame of the open editor; the filled 2026-12-31 date "
-            "is visible after re-preparation. The status badge is then scrolled off-screen. "
-            "No reviewer approve is in this clip."
+            "No reviewer approve is in this clip. Invalidation copy mentions a previous "
+            "approval even when none existed — that is current UI text."
         ),
         "segments": [
             {
                 "id": "requester-clarification",
                 "source": "requester.webm",
-                "start": 1.50,
-                "end": 3.20,
+                "start": 2.60,
+                "end": 2.61,
                 "role": "Requester",
+                "hold_frame": True,
                 "freeze": 2.0,
             },
             {
                 "id": "requester-correction",
                 "source": "requester.webm",
-                "start": 3.20,
-                "end": 3.40,
+                "start": 3.50,
+                "end": 3.51,
                 "role": "Requester",
-                "freeze": 2.0,
                 "hold_frame": True,
+                "freeze": 1.8,
             },
             {
-                "id": "requester-result",
+                "id": "requester-status",
                 "source": "requester.webm",
-                "start": 3.95,
-                "end": 4.92,
+                "start": 5.30,
+                "end": 5.31,
                 "role": "Requester",
+                "hold_frame": True,
                 "freeze": 2.8,
+                "extra": "Re-preparation result — no approval in this clip",
+            },
+            {
+                "id": "requester-findings",
+                "source": "requester.webm",
+                "start": 8.90,
+                "end": 8.91,
+                "role": "Requester",
+                "hold_frame": True,
+                "freeze": 2.4,
             },
         ],
     },
@@ -110,56 +121,78 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "poster": "03-prohibited-access-poster.png",
         "poster_from": "requester-finding",
         "visual_limitation": (
-            "The Kielletty käyttöoikeus title is below the captured 1440×900 viewport; "
-            "the clip shows the requested role tuotanto-superadmin, status Odottaa täsmennystä, "
-            "and a reviewer queue that lists other ready cases, not this request. "
-            "The tested API 409 is not in the video."
+            "API 409 is capture-result evidence, not in the video. "
+            "The later policy-violation guard was not exercised."
         ),
         "segments": [
             {
+                "id": "requester-identity",
+                "source": "requester.webm",
+                "start": 4.00,
+                "end": 4.01,
+                "role": "Requester",
+                "hold_frame": True,
+                "freeze": 2.0,
+            },
+            {
                 "id": "requester-finding",
                 "source": "requester.webm",
-                "start": 1.85,
-                "end": 2.96,
+                "start": 5.60,
+                "end": 5.61,
                 "role": "Requester",
-                "freeze": 4.0,
+                "hold_frame": True,
+                "freeze": 3.5,
             },
             {
                 "id": "reviewer-queue",
                 "source": "reviewer-queue.webm",
-                "start": 0.90,
-                "end": 2.28,
+                "start": 2.30,
+                "end": 2.31,
                 "role": "Reviewer",
-                "freeze": 4.0,
+                "hold_frame": True,
+                "freeze": 2.4,
+                "extra": "EMP-3003 is not listed — needs_clarification, not ready for review",
             },
         ],
     },
     "04-conflicting-instructions": {
         "gif": "04-conflicting-instructions.gif",
         "poster": "04-conflicting-instructions-poster.png",
-        "poster_from": "requester-sources",
+        "poster_from": "requester-source-a",
         "visual_limitation": (
-            "Ristiriita B is in the captured viewport. Ristiriita A was asserted in the DOM "
-            "during recording but scrolled out of frame; it is not fabricated here."
+            "Missing end date causes clarification. Retrieved A/B cards are evidence; "
+            "there is no automatic conflict-detection status."
         ),
         "segments": [
             {
                 "id": "requester-clarification",
                 "source": "requester.webm",
-                "start": 1.45,
-                "end": 1.56,
+                "start": 3.20,
+                "end": 3.21,
                 "role": "Requester",
-                "freeze": 3.2,
                 "hold_frame": True,
+                "freeze": 2.2,
+                "extra": "Clarification is the missing end date, not conflict routing",
             },
             {
-                "id": "requester-sources",
+                "id": "requester-source-a",
                 "source": "requester.webm",
-                "start": 1.72,
-                "end": 3.48,
+                "start": 5.60,
+                "end": 5.61,
                 "role": "Requester",
-                "freeze": 5.0,
-                "extra": "Recording configuration: RETRIEVAL_TOP_K=8",
+                "hold_frame": True,
+                "freeze": 3.5,
+                "extra": "Recording configuration: RETRIEVAL_TOP_K=8 (04 recapture stack only)",
+            },
+            {
+                "id": "requester-source-b",
+                "source": "requester.webm",
+                "start": 8.00,
+                "end": 8.01,
+                "role": "Requester",
+                "hold_frame": True,
+                "freeze": 3.5,
+                "extra": "Recording configuration: RETRIEVAL_TOP_K=8 (04 recapture stack only)",
             },
         ],
     },
@@ -414,14 +447,11 @@ def render_segment(
     freeze = float(spec.get("freeze") or 0)
     extra = str(spec.get("extra") or "")
     hold_frame = bool(spec.get("hold_frame"))
-    vf = (
-        f"scale={width}:-1:flags=lanczos,fps={fps},setsar=1,"
-        + overlay_filter(font, spec["role"], extra)
-    )
+    overlay = overlay_filter(font, spec["role"], extra)
     output.parent.mkdir(parents=True, exist_ok=True)
-    duration = end - start
     if hold_frame:
-        duration = max(duration, 0.20)
+        # Encode from an inspected still. VP8 input -ss can skip to the next keyframe
+        # and drop the evidence that was visible in the extracted PNG.
         still = output.with_name(output.stem + "-hold.png")
         run_ffmpeg(
             ffmpeg,
@@ -435,10 +465,39 @@ def render_segment(
                 str(still),
             ],
         )
+        hold_duration = freeze if freeze > 0.05 else max(end - start, 2.0)
+        vf = (
+            f"loop=loop=-1:size=1:start=0,trim=duration={hold_duration:.3f},"
+            f"setpts=PTS-STARTPTS,scale={width}:-1:flags=lanczos,fps={fps},setsar=1,"
+            + overlay
+        )
+        encode_segment_video(
+            ffmpeg,
+            ["-i", str(still), "-vf", vf],
+            output,
+            fps,
+        )
+        return {
+            "id": spec["id"],
+            "source": source.name,
+            "role": spec["role"],
+            "start": start,
+            "end": start,
+            "hold_frame": True,
+            "hold_still": str(still),
+            "freeze_seconds": hold_duration,
+            "extra_caption": extra,
+            "duration_seconds": round(ffprobe_duration(ffprobe, output), 3),
+            "output": str(output),
+        }
+    duration = end - start
     if duration <= 0.05:
         raise RuntimeError(f"Segment {spec['id']} has a non-positive duration.")
+    vf = (
+        f"scale={width}:-1:flags=lanczos,fps={fps},setsar=1,"
+        + overlay
+    )
     # Seek with input -ss/-t (before -i). Output -t would clip tpad freezes.
-    # Input seek matches the inspected -ss stills; trim-filter PTS on VP8 can skip the shot.
     if freeze > 0:
         vf += f",tpad=stop_mode=clone:stop_duration={freeze:.3f}"
     encode_segment_video(
@@ -462,7 +521,7 @@ def render_segment(
         "role": spec["role"],
         "start": start,
         "end": start + duration,
-        "hold_frame": hold_frame,
+        "hold_frame": False,
         "freeze_seconds": freeze,
         "extra_caption": extra,
         "duration_seconds": round(ffprobe_duration(ffprobe, output), 3),
@@ -519,6 +578,24 @@ def encode_gif(ffmpeg: Path, source: Path, output: Path, fps: int) -> None:
             str(output),
         ],
     )
+
+
+def extract_concat_segment_stills(
+    ffmpeg: Path,
+    concat_path: Path,
+    rendered: list[dict[str, Any]],
+    dest: Path,
+) -> dict[str, str]:
+    dest.mkdir(parents=True, exist_ok=True)
+    paths: dict[str, str] = {}
+    offset = 0.0
+    for item in rendered:
+        duration = float(item["duration_seconds"])
+        path = dest / f"segment-{item['id']}.png"
+        extract_poster(ffmpeg, concat_path, path, offset + duration * 0.5)
+        paths[f"segment-{item['id']}"] = str(path)
+        offset += duration
+    return paths
 
 
 def extract_poster(ffmpeg: Path, source: Path, output: Path, seconds: float) -> None:
@@ -646,6 +723,11 @@ def convert_scenario(
             break
     extract_poster(ffmpeg, concat_path, poster_path, poster_seconds)
     stills = extract_gif_stills(ffmpeg, ffprobe, gif_path, work / "verify", fps)
+    stills.update(
+        extract_concat_segment_stills(
+            ffmpeg, concat_path, rendered, work / "verify"
+        )
+    )
     decoded = gif_decodes(ffprobe, gif_path)
     size = gif_path.stat().st_size
     return {
@@ -680,7 +762,10 @@ def main() -> int:
     parser.add_argument("--fps", type=int, default=10)
     parser.add_argument("--width", type=int, default=960)
     args = parser.parse_args()
-    selected = list(SCENARIOS) if args.scenario == "all" else [args.scenario]
+    if args.scenario == "all":
+        selected = list(SCENARIOS)
+    else:
+        selected = [item.strip() for item in args.scenario.split(",") if item.strip()]
     unknown = [item for item in selected if item not in SCENARIOS]
     if unknown:
         log(f"Unknown scenario: {unknown[0]}")
@@ -697,7 +782,7 @@ def main() -> int:
     log(f"FFmpeg: {ffmpeg}")
     WORK_DIR.mkdir(parents=True, exist_ok=True)
     previous_by_id: dict[str, dict[str, Any]] = {}
-    if args.scenario != "all" and MEDIA_MANIFEST.is_file():
+    if MEDIA_MANIFEST.is_file():
         previous = json.loads(MEDIA_MANIFEST.read_text(encoding="utf-8"))
         previous_by_id = {
             item["id"]: item
@@ -753,10 +838,20 @@ def main() -> int:
         "providers": capture.get("providers"),
         "retrieval_top_k": capture.get("retrieval_top_k"),
         "retrieval_top_k_reason": capture.get("retrieval_top_k_reason"),
+        "retrieval_top_k_scope": capture.get("retrieval_top_k_scope"),
+        "retrieval_top_k_note": (
+            "manifest.json retrieval_top_k is the latest recapture run only. "
+            "Per-scenario values are in docs/walkthrough/media/provenance.md."
+        ),
         "browser": capture.get("browser"),
         "gifs_generated": gifs_ok,
+        "gifs_generated_note": (
+            "This field is conversion status. Capture-stage manifests keep "
+            "gifs_generated=false even after GIFs exist."
+        ),
         "waiting_disclosure": WAITING_DISCLOSURE,
         "ffmpeg": str(ffmpeg),
+        "provenance": "docs/walkthrough/media/provenance.md",
         "scenarios": results,
     }
     MEDIA_MANIFEST.write_text(json.dumps(media_manifest, indent=2) + "\n", encoding="utf-8")

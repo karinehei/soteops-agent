@@ -5,13 +5,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse, urlunparse
@@ -452,6 +453,35 @@ def build_api_env(
     return env
 
 
+def history_dir(artifact_root: Path) -> Path:
+    path = artifact_root / "history"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def archive_file(path: Path, dest_dir: Path) -> Path | None:
+    if not path.is_file():
+        return None
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    dest = dest_dir / f"{path.stem}-{stamp}{path.suffix}"
+    shutil.copy2(path, dest)
+    return dest
+
+
+def archive_scenario_videos(artifact_root: Path, scenario_ids: list[str]) -> Path | None:
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    dest_root = history_dir(artifact_root) / f"videos-{stamp}"
+    copied = False
+    for scenario_id in scenario_ids:
+        src = artifact_root / scenario_id
+        if not src.is_dir():
+            continue
+        shutil.copytree(src, dest_root / scenario_id, dirs_exist_ok=True)
+        copied = True
+    return dest_root if copied else None
+
+
 def write_manifest(
     artifact_root: Path,
     *,
@@ -464,25 +494,73 @@ def write_manifest(
 ) -> Path:
     commit, dirty = git_meta()
     results_dir = artifact_root / "results"
-    scenarios: list[dict[str, Any]] = []
+    path = artifact_root / "manifest.json"
+    archived = archive_file(path, history_dir(artifact_root))
+    previous_by_id: dict[str, dict[str, Any]] = {}
+    if archived is not None:
+        previous = json.loads(archived.read_text(encoding="utf-8"))
+        previous_by_id = {
+            item["id"]: item
+            for item in previous.get("scenarios", [])
+            if isinstance(item, dict) and item.get("id")
+        }
+    selected_set = set(selected)
+    new_by_id: dict[str, dict[str, Any]] = {}
     for scenario_id in selected:
-        path = results_dir / f"{scenario_id}.json"
-        if path.is_file():
-            scenarios.append(json.loads(path.read_text(encoding="utf-8")))
+        result_path = results_dir / f"{scenario_id}.json"
+        if result_path.is_file():
+            new_by_id[scenario_id] = json.loads(result_path.read_text(encoding="utf-8"))
         else:
-            scenarios.append(
-                {
-                    "id": scenario_id,
-                    "fixture": "",
-                    "assertions": [],
-                    "assertions_passed": False,
-                    "outcome": "failed" if playwright_code != 0 else "skipped",
-                    "video_segments": [],
-                    "planned_gif": SCENARIOS[scenario_id]["gif"],
-                    "limitation": "No scenario result file was written.",
-                    "notes": "",
-                }
-            )
+            new_by_id[scenario_id] = {
+                "id": scenario_id,
+                "fixture": "",
+                "assertions": [],
+                "assertions_passed": False,
+                "outcome": "failed" if playwright_code != 0 else "skipped",
+                "video_segments": [],
+                "planned_gif": SCENARIOS[scenario_id]["gif"],
+                "limitation": "No scenario result file was written.",
+                "notes": "",
+            }
+    scenarios: list[dict[str, Any]] = []
+    for scenario_id in SCENARIOS:
+        if scenario_id in selected_set:
+            scenarios.append(new_by_id[scenario_id])
+        elif scenario_id in previous_by_id:
+            scenarios.append(previous_by_id[scenario_id])
+    recapture_path = artifact_root / (
+        f"manifest-recapture-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+    )
+    recapture = {
+        "source_commit": commit,
+        "working_tree_dirty": dirty,
+        "capture_date": date.today().isoformat(),
+        "capture_stage": "videos-only",
+        "gifs_generated": False,
+        "gifs_generated_note": (
+            "false means this capture record does not include GIF conversion. "
+            "Conversion status is artifacts/walkthrough/media-manifest.json."
+        ),
+        "providers": {
+            "llm": "fake",
+            "embedding": "fake",
+            "azure_openai_enabled": False,
+        },
+        "this_run_scenarios": selected,
+        "retrieval_top_k": retrieval_top_k,
+        "retrieval_top_k_scope": (
+            "entire recording stack for this run (isolated API process)"
+        ),
+        "retrieval_top_k_reason": retrieval_reason,
+        "database": WALKTHROUGH_DB,
+        "ports": ports,
+        "browser": browser_channel or "playwright-chromium",
+        "archived_previous_manifest": (
+            str(archived.relative_to(REPO_ROOT)).replace("\\", "/") if archived else None
+        ),
+        "scenarios": [new_by_id[item] for item in selected],
+    }
+    recapture_path.write_text(json.dumps(recapture, indent=2) + "\n", encoding="utf-8")
     manifest = {
         "source_commit": commit,
         "working_tree_dirty": dirty,
@@ -494,14 +572,27 @@ def write_manifest(
         },
         "retrieval_top_k": retrieval_top_k,
         "retrieval_top_k_reason": retrieval_reason,
+        "retrieval_top_k_scope": (
+            "entire recording stack for the latest run listed in this_run_scenarios"
+        ),
+        "this_run_scenarios": selected,
         "database": WALKTHROUGH_DB,
         "ports": ports,
         "browser": browser_channel or "playwright-chromium",
         "gifs_generated": False,
+        "gifs_generated_note": (
+            "false describes the video-capture stage only. GIF conversion status belongs in "
+            "artifacts/walkthrough/media-manifest.json."
+        ),
         "planned_gif_paths": {key: value["gif"] for key, value in SCENARIOS.items()},
+        "latest_recapture_record": str(recapture_path.relative_to(REPO_ROOT)).replace(
+            "\\", "/"
+        ),
+        "archived_previous_manifest": (
+            str(archived.relative_to(REPO_ROOT)).replace("\\", "/") if archived else None
+        ),
         "scenarios": scenarios,
     }
-    path = artifact_root / "manifest.json"
     path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return path
 
@@ -516,7 +607,10 @@ def main() -> int:
         help="Scenario id (01-successful-request … 06-stale-proposal) or all",
     )
     args = parser.parse_args()
-    selected = list(SCENARIOS) if args.scenario == "all" else [args.scenario]
+    if args.scenario == "all":
+        selected = list(SCENARIOS)
+    else:
+        selected = [item.strip() for item in args.scenario.split(",") if item.strip()]
     unknown = [item for item in selected if item not in SCENARIOS]
     if unknown:
         log(f"Unknown scenario: {unknown[0]}")
@@ -747,8 +841,11 @@ def main() -> int:
                 "EMBEDDING_PROVIDER": "fake",
             }
         )
+        archived_videos = archive_scenario_videos(artifact_root, selected)
+        if archived_videos is not None:
+            log(f"Archived previous videos under {archived_videos}")
         cmd = [npx, "playwright", "test", "-c", "playwright.record.config.ts"]
-        if args.scenario != "all":
+        if selected != list(SCENARIOS):
             setup = subprocess.run(
                 [npx, "playwright", "test", "-c", "playwright.record.config.ts", "--project=setup"],
                 cwd=REPO_ROOT / "frontend",
@@ -770,7 +867,8 @@ def main() -> int:
                     browser_channel=browser_channel,
                 )
                 return setup.returncode
-            cmd.extend(["--project=record", f"e2e-record/{args.scenario}.spec.ts"])
+            cmd.append("--project=record")
+            cmd.extend([f"e2e-record/{scenario_id}.spec.ts" for scenario_id in selected])
         log("Recording with Playwright (video on per labeled context).")
         play = subprocess.run(cmd, cwd=REPO_ROOT / "frontend", env=play_env, check=False)
         manifest = write_manifest(

@@ -16,7 +16,7 @@ Raw Playwright videos stay in gitignored `artifacts/walkthrough/`. GIFs and post
 
 All employees, systems, and instructions in the clips are synthetic (`@demo.invalid`, `demo-hr-testi`, `SYNTHETIC` instruction titles). Default inference is `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake`. Fake findings are labelled and are not measured model quality.
 
-Capture provenance (unchanged in `artifacts/walkthrough/manifest.json`): installed Chrome, `RETRIEVAL_TOP_K=8` for the recording stack, fake LLM and embeddings.
+Capture provenance: [`media/provenance.md`](media/provenance.md). Fake LLM and embeddings, isolated `soteops_walkthrough` database, installed Chrome. `RETRIEVAL_TOP_K=8` is not a product default; see that summary for per-scenario scope.
 
 ## Verified scenarios
 
@@ -25,7 +25,7 @@ Capture provenance (unchanged in `artifacts/walkthrough/manifest.json`): install
 | Successful request | Supported and recorded | [01](01-successful-request.md) | [media/01-successful-request.gif](media/01-successful-request.gif) |
 | Missing end date | Supported and recorded | [02](02-missing-end-date.md) | [media/02-missing-end-date.gif](media/02-missing-end-date.gif) |
 | Prohibited access | Supported and recorded | [03](03-prohibited-access.md) | [media/03-prohibited-access.gif](media/03-prohibited-access.gif) |
-| Conflicting instructions | Recorded at `RETRIEVAL_TOP_K=8`; B in viewport, A asserted off-screen | [04](04-conflicting-instructions.md) | [media/04-conflicting-instructions.gif](media/04-conflicting-instructions.gif) |
+| Conflicting instructions | Recorded at `RETRIEVAL_TOP_K=8` (04 recapture stack); A and B in the GIF | [04](04-conflicting-instructions.md) | [media/04-conflicting-instructions.gif](media/04-conflicting-instructions.gif) |
 | Timeout / lost response | Recorded in-dispatch reconcile; lingering `unknown` is test-only | [05](05-timeout-reconciliation.md) | [media/05-timeout-reconciliation.gif](media/05-timeout-reconciliation.gif) |
 | Stale proposal after edit | Recorded during review; edit-after-approve is locked | [06](06-stale-proposal.md) | [media/06-stale-proposal.gif](media/06-stale-proposal.gif) |
 

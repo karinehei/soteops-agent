@@ -4,7 +4,7 @@
 
 ![Missing end date](media/02-missing-end-date.gif)
 
-**Caption:** Clarification for a missing end date, requester correction (`Loppupäivä` 2026-12-31), then re-preparation with empty findings. This clip does not include reviewer approval. After re-preparation the status badge is scrolled off-screen; the filled date and “Ei puuttuvia kenttiä” are the visible outcome. Waiting periods are shortened; GIF duration is not measured application latency.
+**Caption:** Clarification for a missing end date, requester correction (`Loppupäivä` 2026-12-31), then re-preparation to **Odottaa tarkastusta** with **Ei puuttuvia kenttiä eikä sääntöhavaintoja**. This clip does not include reviewer approval. Waiting periods are shortened; GIF duration is not measured application latency.
 
 ## What you would see
 

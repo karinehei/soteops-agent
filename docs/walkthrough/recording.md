@@ -56,6 +56,6 @@ python scripts/walkthrough_gif.py --scenario 01-successful-request
 
 FFmpeg is required (`winget install Gyan.FFmpeg`, or set `FFMPEG_DIR` to the directory that contains `ffmpeg`). If FFmpeg is missing, the script reports that and writes no GIFs.
 
-Outputs: `docs/walkthrough/media/0N-*.gif` and matching `0N-*-poster.png`. Temporary conversion files: `artifacts/walkthrough/gif-work/`. Settings, input hashes, trim ranges, sizes, and durations: `artifacts/walkthrough/media-manifest.json`. The capture manifest is left unchanged.
+Outputs: `docs/walkthrough/media/0N-*.gif` and matching `0N-*-poster.png`. Temporary conversion files: `artifacts/walkthrough/gif-work/`. Settings, input hashes, trim ranges, sizes, and durations: `artifacts/walkthrough/media-manifest.json`. Capture-stage `gifs_generated=false` means videos only; see [`media/provenance.md`](media/provenance.md). The capture manifest is left unchanged.
 
 Waiting periods in the GIFs are shortened. GIF duration is not measured application latency.
