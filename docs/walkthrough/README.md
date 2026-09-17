@@ -28,7 +28,9 @@ This is independent portfolio work. It is not affiliated with Päijät-Hämeen h
 - Banner labels: **Requester** / **Reviewer**, plus `Local demo · Simulated AI · Synthetic data`. Extra overlay lines are documentation captions, not application UI.
 - Scenarios **02, 03, and 04** are **edited sequences of held frames** taken from real local recordings (readable pauses). 01, 05, and 06 keep their original motion clips.
 - Waiting periods are shortened. GIF duration is **not** application latency.
-- `RETRIEVAL_TOP_K=8` applied to the original capture used for 01, 05, and 06, and to the 04 recapture. Recaptures for 02 and 03 used the default `TOP_K=4`. 8 is not the product default.
+- `RETRIEVAL_TOP_K=8` was used for the **original full-stack capture** of 01, 05, and 06, and for the **04 recapture**. Recaptures of 02 and 03 used the default `TOP_K=4`. 8 is not the product default. The 04 GIF overlay names that recapture’s stack; it does not mean 04 is the only published clip recorded at 8.
 - Capture-stage records describe the **video** stage (`gifs_generated=false` there). Conversion status is separate. Reader-facing facts: [media/provenance.md](media/provenance.md).
+
+Media were generated and inspected locally. Documentation links were checked locally. GitHub rendering and the documentation GitHub Actions job have **not** been observed for this revision. Recruiter access is **not** confirmed.
 
 To run the Finnish UI locally, see [setup](../setup.md). Capture operator notes: [recording.md](recording.md) and [recording-plan.md](recording-plan.md). Architecture: [architecture](../architecture.md).

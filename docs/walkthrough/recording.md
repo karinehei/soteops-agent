@@ -59,3 +59,5 @@ FFmpeg is required (`winget install Gyan.FFmpeg`, or set `FFMPEG_DIR` to the dir
 Outputs: `docs/walkthrough/media/0N-*.gif` and matching `0N-*-poster.png`. Temporary conversion files: `artifacts/walkthrough/gif-work/`. Settings, input hashes, trim ranges, sizes, and durations: `artifacts/walkthrough/media-manifest.json`. Capture-stage `gifs_generated=false` means videos only; see [`media/provenance.md`](media/provenance.md). The capture manifest is left unchanged.
 
 Waiting periods in the GIFs are shortened. GIF duration is not measured application latency.
+
+Tracked media check (no FFmpeg, no `artifacts/walkthrough/`): `python scripts/check_walkthrough_docs.py`.

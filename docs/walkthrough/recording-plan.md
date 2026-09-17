@@ -280,7 +280,7 @@ There is no separate `conflict` request status. The labelled demo fixture is als
 
 ### Blockers
 
-If only one conflict document (or neither) appears at `RETRIEVAL_TOP_K=4`, **do not record a fabricated pair**. The 04 recapture used `RETRIEVAL_TOP_K=8` for that recording stack only, because both sources were absent at 4. The published GIF shows **Ristiriita A** then **Ristiriita B** in frame.
+If only one conflict document (or neither) appears at `RETRIEVAL_TOP_K=4`, **do not record a fabricated pair**. The 04 recapture used `RETRIEVAL_TOP_K=8` for that isolated recording stack because both sources were absent at 4. Original captures for 01, 05, and 06 also used 8. Recaptures for 02 and 03 used 4. The published GIF shows **Ristiriita A** then **Ristiriita B** in frame.
 
 ---
 

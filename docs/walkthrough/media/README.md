@@ -26,4 +26,12 @@ Requires FFmpeg (`winget install Gyan.FFmpeg`, or set `FFMPEG_DIR`). Temporary f
 
 ## Provenance
 
-Tracked summary: [`provenance.md`](provenance.md). Capture-stage `gifs_generated=false` means videos only; conversion status is `artifacts/walkthrough/media-manifest.json`. `RETRIEVAL_TOP_K=8` applied to the original full stack (01, 05, 06) and to the 04 recapture stack; 02 and 03 recaptures used the default 4.
+Tracked summary: [`provenance.md`](provenance.md). Capture-stage `gifs_generated=false` means videos only; conversion status is `artifacts/walkthrough/media-manifest.json`. `RETRIEVAL_TOP_K=8` was used for the original full-stack capture (01, 05, 06) and for the 04 recapture; 02 and 03 recaptures used the default 4. 04 is not the only published scenario recorded at 8.
+
+Lightweight CI/local check (no FFmpeg, no recordings, no network):
+
+```powershell
+python scripts/check_walkthrough_docs.py
+```
+
+Budget enforced by that script: each GIF/poster ≤ 5 MiB; all twelve files together ≤ 16 MiB.

@@ -10,14 +10,17 @@ Environment for every listed run: `LLM_PROVIDER=fake`, `EMBEDDING_PROVIDER=fake`
 
 ## `RETRIEVAL_TOP_K`
 
-`artifacts/walkthrough/manifest.json` currently reports `retrieval_top_k=8` because that is the **latest recapture run** (`04-conflicting-instructions` only). It is not the product default and did not apply to every scenario.
+Published GIFs used two recording configurations. Default app/CI `RETRIEVAL_TOP_K` remains **4**.
 
-| Scenario | Value | Scope |
+| Published scenarios | Value | Recording |
 | --- | --- | --- |
-| 01, 05, 06 | 8 | Original full-stack capture (`artifacts/walkthrough/history/manifest-2026-09-17-initial.json`) |
-| 02 | 4 | Recapture stack for that run only (`artifacts/walkthrough/manifest-recapture-20260917-142523.json`) |
-| 03 | 4 | Recapture stack for that run only (`artifacts/walkthrough/manifest-recapture-20260917-142414.json`) |
-| 04 | 8 | Recapture stack for that run only (`artifacts/walkthrough/manifest-recapture-20260917-143249.json`). Default 4 did not return both conflict documents. |
+| 01, 05, 06 | 8 | Original full-stack capture |
+| 02, 03 | 4 | Isolated recapture stacks (those runs only) |
+| 04 | 8 | Isolated recapture stack (default 4 did not return both conflict documents) |
+
+`TOP_K=8` is therefore on **four** published scenarios (01, 04, 05, 06), not only 04. The 04 GIF overlay names that recapture’s isolated API process; it does not mean 04 is the only clip recorded at 8.
+
+Ignored `artifacts/walkthrough/manifest.json` currently reports `retrieval_top_k=8` because that field is the **latest recapture run** (04), not a roll-up of every published GIF.
 
 ## Historical records (gitignored)
 

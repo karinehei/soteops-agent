@@ -2,7 +2,7 @@
 
 This repository currently ships foundation, access-request domain, human approval, bounded LangGraph preparation, and forwarding of an approved proposal to the local mock integration. The mock stores a request record and does not grant access.
 
-**Recruiter presentation** is the repository walkthrough [`docs/walkthrough/`](walkthrough/README.md) (GIFs recorded later from this local UI). It replaces a public deployment. Do not configure a visitor host for the demo. The live 3–5 minute script remains [`demo-script.md`](demo-script.md).
+**Recruiter presentation** is the repository walkthrough [`docs/walkthrough/`](walkthrough/README.md) (GIFs recorded from this local UI). It replaces a public deployment. Do not configure a visitor host for the demo. The live 3–5 minute script remains [`demo-script.md`](demo-script.md).
 
 Authentication is **local demo login**, not Entra ID. Sessions live in an HttpOnly cookie. Do not store bearer tokens in `localStorage`.
 

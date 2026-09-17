@@ -1,6 +1,16 @@
 # SoteOps Agent — implementation plan
 
-Status: foundation through portfolio evaluation, security scanning CI, and demo documentation are implemented (sections 1–8 and 12). Recruiter presentation is a GitHub Markdown walkthrough (`docs/walkthrough/`); GIFs are planned, not yet recorded (section 13). Do not claim the product hypothesis has been validated.
+Status: foundation through portfolio evaluation, security scanning CI, demo documentation, and the local recruiter walkthrough (GIFs/posters) are implemented (sections 1–8 and 12–13). Do not claim the product hypothesis has been validated.
+
+**Section 13 completion (honest status)**
+
+| Item | Status |
+| --- | --- |
+| Local capture, conversion, and walkthrough pages | **Done** — media generated and inspected locally |
+| Documentation consistency | **Checked locally** (relative links, media files, provenance coverage) |
+| GitHub Markdown rendering | **Not previewed** |
+| GitHub Actions documentation job | **Added in the tree; execution not yet observed** |
+| Recruiter access to the repository | **Not confirmed** |
 
 ## 1. Product
 
@@ -218,9 +228,9 @@ The graph stops after persist. It has no tools that approve, reject, or call moc
 9. Synthetic evaluation corpus (35 cases, held-out split) + metrics harness **(done — `seed/evaluation/`, `test_evaluation.py`)**
 10. Security/release checks (pip-audit, npm audit, gitleaks, `docs/security-review.md`) **(done)**
 11. Portfolio docs (README, `docs/evaluation.md`, `docs/demo-script.md`, results under `docs/results/`) **(done)**
-12. Recruiter walkthrough pages and recording plan under `docs/walkthrough/` **(done — GIFs not recorded)**
+12. Recruiter walkthrough pages, recording plan, and local GIFs/posters **(done locally — details in section 13)**
 
-Stop here for review.
+Stop here before hosting, paid APIs, or repository visibility changes.
 
 ## 13. Portfolio presentation (walkthrough, not public deploy)
 
@@ -236,4 +246,6 @@ Recording constraints (also in `docs/walkthrough/recording-plan.md`):
 - Edit after approve is locked by the pending submission; invalidation GIFs use the stale-proposal path during review
 - Lingering downstream `unknown` is recovered in tests; the labelled `lost-response` UI control reconciles in the same forward call
 
-GIFs are not in the tree until a recording pass follows that plan.
+**Done locally (2026-09-17):** six scenarios captured from the isolated walkthrough stack with fake LLM/embeddings; GIFs and posters converted into `docs/walkthrough/media/`; recruiter pages written under `docs/walkthrough/`. 02–04 GIFs are held-frame sequences from real recapture videos. Provenance: [`docs/walkthrough/media/provenance.md`](walkthrough/media/provenance.md). Lightweight link/media validation: `python scripts/check_walkthrough_docs.py` (GitHub Actions job added; that job has not been observed to run).
+
+GitHub page rendering was not previewed. Recruiter access has not been confirmed. Do not treat a local check as a GitHub CI result.

@@ -14,7 +14,7 @@ Show two contradictory **SYNTHETIC** instruction cards as evidence for a human. 
 2. **Ohjelähteet ja versiot** — **Ristiriita A: kirjaaja ilman loppupäivää (SYNTHETIC)** (`SYN-OHJE-RISTIRIITA-A-01-v1`): the excerpt says a registrar role *may* be recorded without an end date, in intended conflict with B. *Ohje on näyttöä tarkastajalle, ei valtuutus.*
 3. Then **Ristiriita B: kirjaaja vaatii loppupäivän (SYNTHETIC)** (`SYN-OHJE-RISTIRIITA-B-01-v1`): the excerpt says a registrar role *always* requires an end date, in intended conflict with A. Same evidence disclaimer.
 
-The GIF is an edited sequence of held frames so both cards are actually on screen, not only in the DOM. Overlay discloses `RETRIEVAL_TOP_K=8` for the **04 recapture stack only**.
+The GIF is an edited sequence of held frames so both cards are actually on screen, not only in the DOM. Overlay names `RETRIEVAL_TOP_K=8` for **this recapture’s isolated API process**. Original captures for 01, 05, and 06 also used 8. Recaptures for 02 and 03 used 4.
 
 ## What this recording demonstrates
 
@@ -28,7 +28,7 @@ Retrieval can surface both instruction versions. Deterministic rules still requi
 
 ## Limitations
 
-Default app `RETRIEVAL_TOP_K` is 4. This recapture used 8 because both conflict documents were absent at 4. That override is not a product default and did not apply to the 02/03 recaptures. There is no separate `conflict` request status.
+Default app `RETRIEVAL_TOP_K` is 4. This recapture used 8 because both conflict documents were absent at 4. That override is not a product default and was not used for the 02/03 recaptures. Published 01, 05, and 06 still come from the original full-stack capture at 8. There is no separate `conflict` request status.
 
 ## Implementation
 
