@@ -77,8 +77,18 @@ export const VIOLATION_LABELS: Record<string, string> = {
   start_after_end: "Alkupäivä myöhäisempi kuin loppupäivä",
 };
 
+export const ROLE_LABELS: Record<string, string> = {
+  requester: "Pyytäjä",
+  reviewer: "Tarkastaja",
+  operator: "Operaattori",
+};
+
 export function formatFieldName(field: string): string {
   return FIELD_LABELS[field] ?? field;
+}
+
+export function formatRole(role: string): string {
+  return ROLE_LABELS[role] ?? role;
 }
 
 export function requestStatusLabel(status: RequestStatus): string {

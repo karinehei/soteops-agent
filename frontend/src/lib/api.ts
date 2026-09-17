@@ -71,11 +71,19 @@ async function request<T>(
   if (csrf) {
     headers.set(CSRF_HEADER, await ensureCsrfToken());
   }
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-    credentials: "include",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers,
+      credentials: "include",
+    });
+  } catch {
+    throw new ApiError(
+      `Selain ei saanut yhteyttä API-palvelimeen (${API_BASE}). Käynnistä paikallinen pino ja varmista, että CORS_ORIGINS sisältää tämän sivun osoitteen.`,
+      0,
+    );
+  }
   if (response.status === 204) {
     return undefined as T;
   }

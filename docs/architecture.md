@@ -8,6 +8,7 @@ browser (Next.js, fi)
                 -> PostgreSQL + pgvector (:5432, localhost)
                 -> mock-integration (:8001)
                 -> optional local Ollama (manual)
+                -> optional Azure OpenAI (opt-in; mocked tests; not CI)
 ```
 
 ## Runtime boundaries
@@ -16,7 +17,7 @@ browser (Next.js, fi)
 - `GET /health` is process liveness and does not touch the database.
 - `GET /ready` checks PostgreSQL and the `vector` extension.
 - Every HTTP response includes a **server-generated** `X-Correlation-ID`. Client-supplied IDs are ignored. Logs are JSON and include that id when present.
-- Settings are validated with Pydantic. `DATABASE_URL` must be PostgreSQL. `LLM_PROVIDER` and `EMBEDDING_PROVIDER` are independently `fake` or `ollama`. Unknown settings fields are rejected.
+- Settings are validated with Pydantic. `DATABASE_URL` must be PostgreSQL. `LLM_PROVIDER` and `EMBEDDING_PROVIDER` are independently `fake`, `ollama`, or `azure_openai`. Selecting Azure requires `AZURE_OPENAI_ENABLED=true` and deployment settings; there is no fallback. Unknown settings fields are rejected.
 - Seed data is synthetic and loaded only by `soteops-seed`.
 
 ## Authentication (local demo only)

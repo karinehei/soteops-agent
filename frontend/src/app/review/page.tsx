@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { EmptyState, ErrorState, LoadingState } from "@/components/FeedbackStates";
-import { StatusBadge } from "@/components/StatusBadge";
+import { RequestListCard } from "@/components/RequestListCard";
 import type { RequestOut } from "@/lib/api-types";
 import { ApiError, api } from "@/lib/api";
 import { useRequireAuth } from "@/lib/auth-context";
@@ -30,11 +29,16 @@ export default function ReviewQueuePage() {
 
   return (
     <main className="page">
-      <h1>Tarkastusjono</h1>
-      <p className="help">
-        Näytetään pyynnöt, jotka odottavat tarkastusta tai ovat tarkastuksessa. Hyväksyntä sitoo
-        tarkan ehdotustiivitteen.
-      </p>
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Tarkastaja</p>
+          <h1>Tarkastusjono</h1>
+          <p className="help">
+            Näytetään pyynnöt, jotka odottavat tarkastusta tai ovat tarkastuksessa. Hyväksyntä
+            sitoo tarkan ehdotustiivitteen.
+          </p>
+        </div>
+      </div>
       {error ? <ErrorState message={error} /> : null}
       {!items ? (
         <LoadingState label="Ladataan jonoa…" />
@@ -44,13 +48,11 @@ export default function ReviewQueuePage() {
         <ul className="request-list" data-testid="review-queue">
           {items.map((item) => (
             <li key={item.id}>
-              <Link href={`/review/${item.id}`} className="request-card">
-                <div>
-                  <strong>{item.target_system ?? "—"}</strong>
-                  <span className="muted small"> · rev {item.revision}</span>
-                </div>
-                <StatusBadge request={item} />
-              </Link>
+              <RequestListCard
+                href={`/review/${item.id}`}
+                request={item}
+                extra={`rev ${item.revision}`}
+              />
             </li>
           ))}
         </ul>

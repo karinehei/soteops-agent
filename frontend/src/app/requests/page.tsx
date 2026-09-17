@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { EmptyState, ErrorState, LoadingState } from "@/components/FeedbackStates";
-import { StatusBadge } from "@/components/StatusBadge";
+import { RequestListCard } from "@/components/RequestListCard";
 import type { RequestOut } from "@/lib/api-types";
 import { ApiError, api } from "@/lib/api";
 import { useRequireAuth } from "@/lib/auth-context";
-import { requestStatusLabel } from "@/lib/labels";
 
 export default function RequestsPage() {
   const { user, loading: authLoading } = useRequireAuth(["requester", "operator"]);
@@ -33,7 +32,10 @@ export default function RequestsPage() {
   return (
     <main className="page">
       <div className="page-header">
-        <h1>{isRequester ? "Omat pyynnöt" : "Pyynnöt"}</h1>
+        <div>
+          <p className="eyebrow">{isRequester ? "Pyytäjä" : "Operaattori"}</p>
+          <h1>{isRequester ? "Omat pyynnöt" : "Pyynnöt"}</h1>
+        </div>
         {isRequester ? (
           <Link className="btn btn--primary" href="/requests/new" data-testid="new-request-link">
             Uusi pyyntö
@@ -51,24 +53,22 @@ export default function RequestsPage() {
               ? "Luo ensimmäinen synteettinen käyttöoikeuspyyntö."
               : "Ei näytettäviä pyyntöjä."
           }
-        />
+        >
+          {isRequester ? (
+            <Link className="btn btn--primary" href="/requests/new">
+              Luo pyyntö
+            </Link>
+          ) : null}
+        </EmptyState>
       ) : (
         <ul className="request-list" data-testid="request-list">
           {items.map((item) => (
             <li key={item.id}>
-              <Link href={`/requests/${item.id}`} className="request-card">
-                <div>
-                  <strong>{item.target_system ?? "—"}</strong>
-                  <span className="muted small"> · {item.employee_identifier ?? "—"}</span>
-                </div>
-                <StatusBadge request={item} />
-                <span className="muted small">{requestStatusLabel(item.status)}</span>
-              </Link>
+              <RequestListCard href={`/requests/${item.id}`} request={item} />
             </li>
           ))}
         </ul>
       )}
-      <p className="help">Kirjautuneena: {user.display_name}</p>
     </main>
   );
 }

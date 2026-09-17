@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       const me = await api.login(email, password);
       setUser(me);
-      router.push(me.role === "requester" ? "/requests" : "/review");
+      router.push(me.role === "reviewer" ? "/review" : "/requests");
       return me;
     },
     [router],

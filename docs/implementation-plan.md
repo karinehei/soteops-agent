@@ -174,6 +174,7 @@ The graph stops after persist. It has no tools that approve, reject, or call moc
 - Citation IDs are membership-checked. A valid ID does not prove that the passage supports the claim. Similarity and model self-confidence are not shown as calibrated probabilities.
 - `providers/fake.py` is the CI and default path. Fake outputs are labelled and are not measured LLM performance.
 - `providers/ollama.py` is opt-in (`LLM_PROVIDER` and `EMBEDDING_PROVIDER` are independent). It is not used in GitHub Actions.
+- `providers/azure_openai.py` is opt-in (`AZURE_OPENAI_ENABLED` plus provider selection, local API key). Tests mock HTTP only. Not live-verified. Not used in GitHub Actions or default Compose. See `docs/azure-openai.md`.
 
 ## 11. Tests and measurable demo outcomes
 

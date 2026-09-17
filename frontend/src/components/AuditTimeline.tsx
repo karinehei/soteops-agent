@@ -78,10 +78,15 @@ export function AuditTimeline({
               {new Date(event.created_at).toLocaleString("fi-FI")}
             </time>
             <strong>{AUDIT_EVENT_LABELS[event.event_type] ?? event.event_type}</strong>
-            {Object.keys(event.metadata).length > 0 ? (
-              <pre className="audit-meta">
-                {JSON.stringify(sanitizeMetadata(event.metadata), null, 2)}
-              </pre>
+            {Object.keys(sanitizeMetadata(event.metadata)).length > 0 ? (
+              <dl className="field-list compact">
+                {Object.entries(sanitizeMetadata(event.metadata)).map(([key, value]) => (
+                  <div key={key}>
+                    <dt>{key}</dt>
+                    <dd className="mono">{Array.isArray(value) ? value.join(", ") : String(value)}</dd>
+                  </div>
+                ))}
+              </dl>
             ) : null}
           </li>
         ))}

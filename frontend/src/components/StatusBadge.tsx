@@ -10,14 +10,23 @@ const TONE_CLASS: Record<string, string> = {
   danger: "badge--danger",
 };
 
-export function StatusBadge({ request }: { request: RequestOut }) {
+export function StatusBadge({
+  request,
+  compact = false,
+}: {
+  request: RequestOut;
+  compact?: boolean;
+}) {
   const state = deriveProcessingState(request);
   return (
-    <div className="status-stack" data-testid="processing-status">
+    <div
+      className={compact ? "status-stack status-stack--compact" : "status-stack"}
+      data-testid="processing-status"
+    >
       <span className={`badge ${TONE_CLASS[state.tone]}`}>
         {PROCESSING_PHASE_LABELS[state.phase]}
       </span>
-      <span className="muted small">{requestStatusLabel(request.status)}</span>
+      <span className="status-technical">{requestStatusLabel(request.status)}</span>
       {state.detail ? <p className="status-detail">{state.detail}</p> : null}
     </div>
   );

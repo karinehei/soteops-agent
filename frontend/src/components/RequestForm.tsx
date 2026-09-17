@@ -85,20 +85,23 @@ export function RequestForm({
           Vapaateksti synteettisestä pyynnöstä. Malli ei myönnä oikeuksia.
         </p>
       </div>
-      <div className="grid-2">
-        {fields.map((field) => (
-          <div className="field" key={field}>
-            <label htmlFor={field}>{formatFieldName(field)}</label>
-            <input
-              id={field}
-              name={field}
-              type={field.includes("date") ? "date" : "text"}
-              value={(form[field] as string | null | undefined) ?? ""}
-              onChange={(event) => setForm({ ...form, [field]: event.target.value })}
-            />
-          </div>
-        ))}
-      </div>
+      <fieldset className="fieldset-plain stack">
+        <legend className="eyebrow">Täydentävät kentät</legend>
+        <div className="grid-2">
+          {fields.map((field) => (
+            <div className="field" key={field}>
+              <label htmlFor={field}>{formatFieldName(field)}</label>
+              <input
+                id={field}
+                name={field}
+                type={field.includes("date") ? "date" : "text"}
+                value={(form[field] as string | null | undefined) ?? ""}
+                onChange={(event) => setForm({ ...form, [field]: event.target.value })}
+              />
+            </div>
+          ))}
+        </div>
+      </fieldset>
       {error ? (
         <p className="form-error" role="alert">
           {error}

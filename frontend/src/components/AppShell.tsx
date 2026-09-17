@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { useAuth } from "@/lib/auth-context";
+import { formatRole } from "@/lib/labels";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user, loading, logout } = useAuth();
+  const { user, logout } = useAuth();
   const hideNav = pathname === "/login";
 
   return (
@@ -20,7 +21,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="site-header" role="banner">
           <div className="site-header__inner">
             <Link className="brand" href="/">
+              <span className="brand__mark" aria-hidden="true" />
               SoteOps Agent
+              <span className="brand__tag">demo</span>
             </Link>
             <nav className="site-nav" aria-label="Päävalikko">
               <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
@@ -38,14 +41,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             </nav>
             <div className="site-header__user">
-              {loading ? (
-                <span className="muted" aria-live="polite">
-                  Ladataan…
-                </span>
-              ) : user ? (
+              {user ? (
                 <>
                   <span className="user-chip" data-testid="current-user">
-                    {user.display_name} ({user.role})
+                    <span className="user-chip__role">{formatRole(user.role)}</span>
+                    {user.display_name}
                   </span>
                   <button type="button" className="btn btn--ghost" onClick={() => void logout()}>
                     Kirjaudu ulos

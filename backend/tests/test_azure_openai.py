@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -27,6 +28,7 @@ from app.providers.azure_openai import (
 )
 from app.providers.factory import get_embedder, get_llm
 from app.providers.fake import FakeEmbeddingProvider, FakeLLMProvider
+from app.providers.ollama import OllamaEmbeddingProvider, OllamaLLMProvider
 from app.retrieval.embedding_index import (
     EmbeddingIndexIncompatibleError,
     assert_compatible,
@@ -40,6 +42,16 @@ from app.retrieval.ingest import (
 from app.schemas.requests import RequestWrite
 from app.workflow.schemas import ExtractionResult
 from tests.conftest import REQUESTER_EMAIL, TEST_SETTINGS, VALID_REQUEST
+
+
+@pytest.fixture(autouse=True)
+def _block_real_httpx(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail if a test uses the real HTTP transport instead of MockTransport."""
+
+    def blocked(self: httpx.HTTPTransport, request: httpx.Request) -> httpx.Response:
+        raise RuntimeError(f"blocked unexpected network request to {request.method} {request.url}")
+
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", blocked)
 
 
 def _azure_settings(**overrides: Any) -> Settings:
@@ -141,6 +153,47 @@ def test_factory_does_not_instantiate_azure_when_fake() -> None:
     assert isinstance(embedder, FakeEmbeddingProvider)
 
 
+def test_factory_ignores_azure_env_when_provider_is_fake() -> None:
+    settings = _azure_settings(llm_provider="fake", embedding_provider="fake")
+    assert isinstance(get_llm(settings), FakeLLMProvider)
+    assert isinstance(get_embedder(settings), FakeEmbeddingProvider)
+
+
+def test_factory_returns_azure_when_selected() -> None:
+    settings = _azure_settings()
+    llm = get_llm(settings)
+    embedder = get_embedder(settings)
+    try:
+        assert isinstance(llm, AzureOpenAILLMProvider)
+        assert isinstance(embedder, AzureOpenAIEmbeddingProvider)
+        assert llm.model == "demo-chat-deployment"
+        assert embedder.model == "demo-embed-deployment"
+    finally:
+        llm._client.close()
+        embedder._client.close()
+
+
+def test_factory_returns_ollama_when_selected() -> None:
+    settings = Settings(
+        environment="test",
+        database_url=TEST_SETTINGS.database_url,
+        mock_integration_url="http://127.0.0.1:8001",
+        llm_provider="ollama",
+        embedding_provider="ollama",
+        ollama_base_url="http://127.0.0.1:11434",
+        demo_auth_enabled=True,
+        session_secret="test-session-secret",
+    )
+    llm = get_llm(settings)
+    embedder = get_embedder(settings)
+    try:
+        assert isinstance(llm, OllamaLLMProvider)
+        assert isinstance(embedder, OllamaEmbeddingProvider)
+    finally:
+        llm._client.close()
+        embedder._client.close()
+
+
 def test_missing_azure_enablement_fails_settings() -> None:
     with pytest.raises(ValidationError) as exc_info:
         Settings(
@@ -233,6 +286,15 @@ def test_refusal_and_malformed_and_truncated() -> None:
     with pytest.raises(ProviderOutputError):
         provider.complete_structured("x", ExtractionResult, purpose="extract")
 
+    def filtered(request: httpx.Request) -> httpx.Response:
+        return _chat_response(_extraction_payload(), finish_reason="content_filter")
+
+    provider = AzureOpenAILLMProvider(
+        settings, client=httpx.Client(transport=httpx.MockTransport(filtered), timeout=2.0)
+    )
+    with pytest.raises(ProviderOutputError, match="refused or truncated"):
+        provider.complete_structured("x", ExtractionResult, purpose="extract")
+
 
 @pytest.mark.parametrize("status", [401, 403])
 def test_auth_errors_do_not_retry(status: int) -> None:
@@ -269,6 +331,22 @@ def test_429_and_transient_retry_then_succeed() -> None:
     assert calls["n"] == 3
 
 
+def test_429_exhausts_retry_budget() -> None:
+    settings = _azure_settings(llm_max_retries=1)
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        return httpx.Response(429, json={"error": {"message": "rate"}})
+
+    provider = AzureOpenAILLMProvider(
+        settings, client=httpx.Client(transport=httpx.MockTransport(handler), timeout=2.0)
+    )
+    with pytest.raises(ProviderError, match="transient"):
+        provider.complete_structured("x", ExtractionResult, purpose="extract")
+    assert calls["n"] == 2
+
+
 def test_timeout_exhausts_retry_budget() -> None:
     settings = _azure_settings(llm_max_retries=1)
     calls = {"n": 0}
@@ -296,6 +374,38 @@ def test_unexpected_network_is_blocked_by_mock_transport() -> None:
     )
     with pytest.raises(AssertionError, match="unexpected"):
         provider._client.post("https://example.openai.azure.com/openai/v1/chat/completions")
+
+
+def test_real_http_transport_is_blocked() -> None:
+    settings = _azure_settings(llm_max_retries=0)
+    provider = AzureOpenAILLMProvider(settings)
+    try:
+        with pytest.raises(RuntimeError, match="blocked unexpected network"):
+            provider.complete_structured("x", ExtractionResult, purpose="extract")
+    finally:
+        provider._client.close()
+
+
+def test_embedding_request_uses_deployment_and_dimensions() -> None:
+    settings = _azure_settings(llm_max_retries=0)
+    calls: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        assert request.url.path.endswith("/embeddings")
+        assert request.headers.get("api-key") == "test-azure-key-not-real"
+        body = json.loads(request.content.decode())
+        assert body["model"] == "demo-embed-deployment"
+        assert body["dimensions"] == EMBEDDING_DIMENSION
+        return _embedding_response([[0.02] * EMBEDDING_DIMENSION])
+
+    provider = AzureOpenAIEmbeddingProvider(
+        settings, client=httpx.Client(transport=httpx.MockTransport(handler), timeout=2.0)
+    )
+    vectors = provider.embed(["synteettinen"])
+    assert len(vectors) == 1
+    assert len(vectors[0]) == EMBEDDING_DIMENSION
+    assert len(calls) == 1
 
 
 def test_embedding_dimension_mismatch() -> None:
@@ -340,18 +450,25 @@ def test_embedding_index_incompatible(isolated_db: None) -> None:
         engine.dispose()
 
 
-def test_exceptions_do_not_leak_api_key() -> None:
+def test_exceptions_and_logs_do_not_leak_api_key(caplog: pytest.LogCaptureFixture) -> None:
     settings = _azure_settings(llm_max_retries=0)
+    secret = "test-azure-key-not-real"
+    prompt = "EMP-1001 lukuoikeus with api-key=test-azure-key-not-real"
 
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("failed api-key=test-azure-key-not-real")
 
-    provider = AzureOpenAILLMProvider(
-        settings, client=httpx.Client(transport=httpx.MockTransport(handler), timeout=2.0)
-    )
-    with pytest.raises(ProviderError) as exc_info:
-        provider.complete_structured("x", ExtractionResult, purpose="extract")
-    assert "test-azure-key-not-real" not in str(exc_info.value)
+    with caplog.at_level(logging.DEBUG):
+        provider = AzureOpenAILLMProvider(
+            settings, client=httpx.Client(transport=httpx.MockTransport(handler), timeout=2.0)
+        )
+        with pytest.raises(ProviderError) as exc_info:
+            provider.complete_structured(prompt, ExtractionResult, purpose="extract")
+    message = str(exc_info.value)
+    assert secret not in message
+    assert "EMP-1001" not in message
+    log_text = " ".join(record.getMessage() for record in caplog.records)
+    assert secret not in log_text
 
 
 def test_mocked_end_to_end_prepare_with_azure(isolated_db: None) -> None:
@@ -409,7 +526,7 @@ def test_mocked_end_to_end_prepare_with_azure(isolated_db: None) -> None:
             assert requester is not None
             from uuid import uuid4
 
-            from app.models import AccessRequest, RequestStatus
+            from app.models import AccessRequest, Approval, RequestStatus, Submission
             from app.rules.policy import current_policy
             from app.services.proposals import prepare_proposal
 
@@ -441,8 +558,20 @@ def test_mocked_end_to_end_prepare_with_azure(isolated_db: None) -> None:
                 embedder=embedder,
             )
             session.commit()
+            session.refresh(request)
             assert proposal.extracted_fields.get("employee_identifier") == "EMP-1001"
             assert proposal.provider_metadata.get("llm_provider") == "azure_openai"
+            assert request.status in {
+                RequestStatus.READY_FOR_REVIEW,
+                RequestStatus.NEEDS_CLARIFICATION,
+            }
+            assert (
+                session.scalar(select(Approval.id).where(Approval.request_id == request.id)) is None
+            )
+            assert (
+                session.scalar(select(Submission.id).where(Submission.request_id == request.id))
+                is None
+            )
             # Restore fake index so other suites (session-scoped seed) stay compatible.
             seed_instructions(
                 session,

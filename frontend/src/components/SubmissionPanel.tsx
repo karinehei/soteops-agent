@@ -48,6 +48,9 @@ export function SubmissionPanel({ request, canForward, onUpdated }: SubmissionPa
   return (
     <section className="card" aria-labelledby="submission-heading" data-testid="submission-panel">
       <h2 id="submission-heading">Lähetyksen tila (mock-integraatio)</h2>
+      <p className="help">
+        Mock-integraatio tallentaa pyyntötietueen. Se ei luo tilejä eikä myönnä oikeuksia.
+      </p>
       <dl className="field-list compact">
         <div>
           <dt>Tila</dt>
@@ -72,9 +75,6 @@ export function SubmissionPanel({ request, canForward, onUpdated }: SubmissionPa
           </div>
         ) : null}
       </dl>
-      <p className="help">
-        Mock-integraatio tallentaa pyyntötietueen. Se ei luo tilejä eikä myönnä oikeuksia.
-      </p>
       {canRetry ? (
         <div className="stack">
           <div className="field">

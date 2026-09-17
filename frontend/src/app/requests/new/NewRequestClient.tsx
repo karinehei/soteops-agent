@@ -16,10 +16,11 @@ export function NewRequestClient() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const initial = useMemo(() => {
+  const scenario = useMemo(() => {
     const scenarioId = params.get("scenario");
-    return DEMO_SCENARIOS.find((item) => item.id === scenarioId)?.payload;
+    return DEMO_SCENARIOS.find((item) => item.id === scenarioId);
   }, [params]);
+  const initial = scenario?.payload;
 
   if (authLoading) {
     return <LoadingState />;
@@ -39,9 +40,9 @@ export function NewRequestClient() {
 
   return (
     <>
-      {initial ? (
-        <p className="notice" role="status">
-          Esitäytetty demoskenaario: {params.get("scenario")}
+      {scenario ? (
+        <p className="notice notice--warning" role="status">
+          Esitäytetty demoskenaario: {scenario.label}
         </p>
       ) : null}
       <section className="card">
