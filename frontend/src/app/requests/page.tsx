@@ -22,7 +22,12 @@ export default function RequestsPage() {
     void api
       .listRequests()
       .then(setItems)
-      .catch((err: Error) => setError(err instanceof ApiError ? err.message : "Lista epäonnistui"));
+      .catch((err: Error) => {
+        if (err instanceof ApiError && err.status === 401) {
+          return;
+        }
+        setError(err instanceof ApiError ? err.message : "Lista epäonnistui");
+      });
   }, [authLoading]);
 
   if (authLoading) {
@@ -43,7 +48,7 @@ export default function RequestsPage() {
         ) : null}
       </div>
       {error ? <ErrorState message={error} /> : null}
-      {!items ? (
+      {error ? null : !items ? (
         <LoadingState label="Ladataan pyyntöjä…" />
       ) : items.length === 0 ? (
         <EmptyState
