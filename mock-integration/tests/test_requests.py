@@ -46,6 +46,21 @@ def test_ready_does_not_provision_accounts(client: TestClient) -> None:
     assert response.json() == {"status": "ok", "stores_accounts": False}
 
 
+def test_local_record_listing_does_not_include_payloads(client: TestClient) -> None:
+    headers = {IDEMPOTENCY_HEADER: "req-list:abc"}
+    created = client.post("/requests", json=_payload(), headers=headers)
+    assert created.status_code == 201
+    listing = client.get("/records")
+    assert listing.status_code == 200
+    body = listing.json()
+    assert body["stores_accounts"] is False
+    assert body["count"] == 1
+    assert body["records"][0]["record_id"] == created.json()["record_id"]
+    assert body["records"][0]["idempotency_key"] == "req-list:abc"
+    assert "payload" not in body
+    assert "payload_hash" not in body["records"][0]
+
+
 def test_post_requires_idempotency_key(client: TestClient) -> None:
     response = client.post("/requests", json=_payload())
     assert response.status_code == 422

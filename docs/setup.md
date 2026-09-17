@@ -1,6 +1,6 @@
 # Setup (WSL / Linux)
 
-Local only. Do not deploy this prototype or point it at real identity systems.
+Local only. Do not deploy this prototype or point it at real identity systems. Recruiter-facing material is [`docs/walkthrough/`](walkthrough/README.md) recorded from this machine, not a public host.
 
 ## Prerequisites
 

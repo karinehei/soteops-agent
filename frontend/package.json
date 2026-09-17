@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
+    "record:walkthrough": "playwright test -c playwright.record.config.ts",
     "generate:api-types": "node scripts/generate-api-types.mjs"
   },
   "dependencies": {

@@ -2,6 +2,8 @@
 
 **Synthetic data only. Not affiliated with any real wellbeing services county. Not production-ready.**
 
+GitHub presentation for people who will not run the stack: [`docs/walkthrough/`](walkthrough/README.md). This script is the **in-person** local run. Do not substitute a public Vercel/Render/Azure/GitHub Pages site.
+
 Prerequisites: `docker compose up --build` or local API + frontend (see README). Fake AI providers (default).
 
 Demo users (passwords in `seed/identities.json`):
@@ -30,18 +32,18 @@ Say explicitly: mock stores a request record; **no account is created**.
 
 ## 2:00 — Clarification case (60 s)
 
-1. Login as requester. Choose demo scenario “Puuttuva kenttä” or submit text **without** employee id / end date for määräaikainen role.
-2. Show status **Tarkennusta tarvitaan** / `needs_clarification`, missing-field list, rule findings.
+1. Login as requester. Choose demo scenario **Määräaikainen ilman loppupäivää** or submit text **without** employee id / end date for määräaikainen / `kirjaaja`.
+2. Show status **Odottaa täsmennystä** / `needs_clarification`, missing-field list, rule findings.
 3. Explain: system routes to clarification, not silent approval.
 
 ## 3:00 — Timeout reconciliation (60 s)
 
 1. Login as reviewer with a **ready** approved request (from happy path or pre-seeded).
-2. Open submission / forward UI. If local demo supports fault injection (`X-Mock-Fault: lost-response` via API or demo control), trigger forward.
-3. Show status **Tuntematon / unknown** — not marked as success.
-4. **Retry forward** — dispatcher reconciles via idempotency key on mock; same record id returned.
+2. Open submission / forward UI. Select demo-vikatila **Kadonnut vastaus onnistuneen käsittelyn jälkeen** (`lost-response`) and forward.
+3. The mock stores the record and omits the HTTP body. The dispatcher looks up the same idempotency key **in that request** and the panel shows **Vastaanotettu** / a mock record id — not a parked **Tuntematon** badge.
+4. Say explicitly: same key, one mock record; the mock still does not create an account.
 
-Alternative if UI fault control unavailable: run `uv run pytest backend/tests/test_forwarding.py::test_stale_in_flight_is_recovered_as_unknown -q` and narrate the UI states from docs.
+A lingering `unknown` status is recovered in pytest (`test_stale_in_flight_is_recovered_as_unknown`). Do not invent that screen if the UI already reconciled. Alternative narration: run that test and describe the states from [`docs/walkthrough/05-timeout-reconciliation.md`](walkthrough/05-timeout-reconciliation.md).
 
 ## 4:00 — Close (30 s)
 

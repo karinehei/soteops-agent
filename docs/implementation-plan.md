@@ -1,6 +1,6 @@
 # SoteOps Agent — implementation plan
 
-Status: foundation through portfolio evaluation, security scanning CI, and demo documentation are implemented (sections 1–8 and 12). Do not claim the product hypothesis has been validated.
+Status: foundation through portfolio evaluation, security scanning CI, and demo documentation are implemented (sections 1–8 and 12). Recruiter presentation is a GitHub Markdown walkthrough (`docs/walkthrough/`); GIFs are planned, not yet recorded (section 13). Do not claim the product hypothesis has been validated.
 
 ## 1. Product
 
@@ -37,6 +37,7 @@ MVP also includes:
 - Real employee, patient, or organization data
 - Real account provisioning, AD/Entra/IAM integration, or mailbox/SMS notifications
 - Cloud deployment, paid model APIs, or any external network call without explicit authorization
+- Public visitor hosting (Vercel, Render, Neon, Azure app hosting, GitHub Pages, shared demo workspaces). Recruiter presentation is repository Markdown plus GIFs from the local app.
 - LLM-granted access, LLM-selected approver, or LLM override of rules
 - Treating retrieved instructions as authorization
 - Redis, Kubernetes, a general agent platform, or a second orchestrator besides LangGraph
@@ -217,5 +218,22 @@ The graph stops after persist. It has no tools that approve, reject, or call moc
 9. Synthetic evaluation corpus (35 cases, held-out split) + metrics harness **(done — `seed/evaluation/`, `test_evaluation.py`)**
 10. Security/release checks (pip-audit, npm audit, gitleaks, `docs/security-review.md`) **(done)**
 11. Portfolio docs (README, `docs/evaluation.md`, `docs/demo-script.md`, results under `docs/results/`) **(done)**
+12. Recruiter walkthrough pages and recording plan under `docs/walkthrough/` **(done — GIFs not recorded)**
 
 Stop here for review.
+
+## 13. Portfolio presentation (walkthrough, not public deploy)
+
+Historical local architecture is unchanged: Compose publishes `127.0.0.1` only; CI uses fake providers; optional Ollama/Azure remain opt-in and are not the recruiter path.
+
+**Decision:** present the prototype on GitHub as Markdown under [`docs/walkthrough/`](walkthrough/README.md), with animated GIFs recorded from the actual local UI. This **replaces** a planned public deployment. Do not add Vercel, Render, Neon, Azure hosting, GitHub Pages, or a public visitor workspace for this presentation.
+
+Recording constraints (also in `docs/walkthrough/recording-plan.md`):
+
+- Synthetic identities and `policy-v1` only
+- `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake`; no live Azure or Ollama during capture
+- Do not fabricate screens. Classify each scenario as recordable, test-only, unimplemented, or blocked
+- Edit after approve is locked by the pending submission; invalidation GIFs use the stale-proposal path during review
+- Lingering downstream `unknown` is recovered in tests; the labelled `lost-response` UI control reconciles in the same forward call
+
+GIFs are not in the tree until a recording pass follows that plan.

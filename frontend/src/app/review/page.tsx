@@ -47,20 +47,24 @@ export default function ReviewQueuePage() {
       {error ? <ErrorState message={error} /> : null}
       {error ? null : !items ? (
         <LoadingState label="Ladataan jonoa…" />
-      ) : items.length === 0 ? (
-        <EmptyState title="Jono tyhjä" message="Ei tarkastusta odottavia pyyntöjä." />
       ) : (
-        <ul className="request-list" data-testid="review-queue">
-          {items.map((item) => (
-            <li key={item.id}>
-              <RequestListCard
-                href={`/review/${item.id}`}
-                request={item}
-                extra={`rev ${item.revision}`}
-              />
-            </li>
-          ))}
-        </ul>
+        <div data-testid="review-queue">
+          {items.length === 0 ? (
+            <EmptyState title="Jono tyhjä" message="Ei tarkastusta odottavia pyyntöjä." />
+          ) : (
+            <ul className="request-list">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <RequestListCard
+                    href={`/review/${item.id}`}
+                    request={item}
+                    extra={`rev ${item.revision}`}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </main>
   );

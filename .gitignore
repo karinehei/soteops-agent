@@ -15,6 +15,7 @@ mock-integration/junit.xml
 
 node_modules/
 frontend/.next/
+frontend/.next-walkthrough/
 frontend/out/
 frontend/tsconfig.tsbuildinfo
 
@@ -25,3 +26,5 @@ dist/
 .idea/
 .vscode/
 *.log
+
+artifacts/

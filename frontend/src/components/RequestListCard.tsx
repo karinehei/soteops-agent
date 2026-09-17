@@ -13,7 +13,7 @@ export function RequestListCard({
   extra?: string;
 }) {
   return (
-    <Link href={href} className="request-card">
+    <Link href={href} className="request-card" data-testid={`request-card-${request.id}`}>
       <div className="request-card__top">
         <div>
           <strong>{request.target_system ?? "Kohdejärjestelmä puuttuu"}</strong>
