@@ -11,18 +11,20 @@
 
 Fake-provider evaluation metrics are **not** Azure model quality. CI and Compose remain on `LLM_PROVIDER=fake` / `EMBEDDING_PROVIDER=fake` unless you explicitly opt in.
 
-## Documentation verification (2026-09-16)
+## Documentation verification (2026-09-17)
 
-Contract used by this adapter:
+Re-checked against current Microsoft Learn pages on 2026-09-17. Contract used by this adapter:
 
 | Concern | Choice | Source |
 | --- | --- | --- |
 | Base URL | `{AZURE_OPENAI_ENDPOINT}/openai/v1` (endpoint may already include `/openai/v1`) | [v1 API lifecycle](https://learn.microsoft.com/en-us/azure/foundry/openai/api-version-lifecycle) |
 | Chat | `POST .../chat/completions`, `model` = **chat deployment name** | [Chat completions](https://learn.microsoft.com/en-us/azure/foundry/openai/latest) |
-| Embeddings | `POST .../embeddings`, `model` = **embedding deployment name** | [Embeddings REST](https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/embeddings), [How to embeddings](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/embeddings) |
-| Auth (this slice) | `api-key` header from `AZURE_OPENAI_API_KEY` | Same docs (API key path) |
+| Embeddings | `POST .../embeddings`, `model` = **embedding deployment name**; optional `dimensions` | [Embeddings REST](https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/embeddings), [How to embeddings](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/embeddings) |
+| Auth (this slice) | `api-key` header from `AZURE_OPENAI_API_KEY` | Same docs (API key path). Entra/`Authorization: Bearer` is documented by Microsoft and **not implemented** here. |
 | Structured output | `response_format.json_schema` + local Pydantic validation | Chat completions `response_format` |
 | Embedding size | Request `dimensions` = index size (`64`); reject mismatches | Index is `Vector(64)` |
+
+Microsoft currently also documents a **Responses API** (`POST .../responses`) as a recommended surface for some Azure OpenAI models. This slice keeps **chat completions** because it is still specified on the v1 API, supports `response_format.json_schema`, and reuses the existing httpx client (no OpenAI SDK). Switching to Responses is future work.
 
 Managed identity / `DefaultAzureCredential` is **not** wired. Future work only.
 

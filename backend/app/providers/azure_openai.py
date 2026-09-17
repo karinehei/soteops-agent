@@ -1,6 +1,6 @@
 """Azure OpenAI adapters (httpx). Implemented; tested with mocked responses; not live-verified.
 
-API contract verified 2026-09-16 against:
+API contract re-verified 2026-09-17 against:
 - https://learn.microsoft.com/en-us/azure/foundry/openai/api-version-lifecycle
 - https://learn.microsoft.com/en-us/azure/foundry/openai/latest
 - https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/embeddings
@@ -8,6 +8,8 @@ API contract verified 2026-09-16 against:
 
 v1 paths: POST {endpoint}/openai/v1/chat/completions and .../embeddings
 Auth for this slice: api-key header. model = Azure deployment name.
+Microsoft also documents a Responses API; this slice keeps chat/completions because
+it remains on the v1 API with response_format.json_schema and reuses httpx.
 Managed identity / Entra token auth is documented as future — not implemented here.
 """
 

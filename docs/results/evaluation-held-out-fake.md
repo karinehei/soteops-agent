@@ -19,8 +19,8 @@
 | Citation validity | 1.000 |
 | Routing accuracy | 1.000 |
 | Approvable accuracy | 1.000 |
-| Latency p50 (ms) | 44.71165699987978 |
-| Latency p95 (ms) | 53.37742199981221 |
+| Latency p50 (ms) | 42.47151799791027 |
+| Latency p95 (ms) | 49.664472997392295 |
 
 ## Control checks (pytest suites)
 

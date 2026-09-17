@@ -62,8 +62,9 @@ Reports written by pytest: `docs/results/evaluation-held-out-fake.json` and `.md
 | --- | --- | --- |
 | GitHub Actions / default local | `fake` | `docs/results/evaluation-held-out-fake.json` |
 | Optional local Ollama | `ollama` | **Not automated** — run manually and save as `evaluation-held-out-ollama.json` if desired |
+| Optional Azure OpenAI | `azure_openai` | **Not evaluated.** Adapter tests mock HTTP only. Fake-provider metrics are not Azure model quality. |
 
-**Real model evaluation was not run for the committed report.** CI uses deterministic fake providers only.
+**Real model evaluation was not run for the committed report.** CI uses deterministic fake providers only. Azure OpenAI is **not live-verified**.
 
 ## Manual comparison protocol (time savings — not fabricated)
 

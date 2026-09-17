@@ -16,6 +16,7 @@ Browser (Next.js, fi)
         → PostgreSQL + pgvector (:5432)
         → mock-integration (:8001)
         → optional local Ollama (manual, not CI)
+        → optional Azure OpenAI (opt-in; mocked tests; not CI)
 ```
 
 ### Request state (simplified)

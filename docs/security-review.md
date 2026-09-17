@@ -90,3 +90,4 @@ CI ignores these IDs with the rationale above. Do not ignore new advisories with
 - CORS allows configured origins only; production hardening (HSTS, CSP) not in scope.
 - Rate limiting and account lockout are not implemented (acceptable for local demo).
 - Real Ollama path is optional and not evaluated in CI.
+- Azure OpenAI is opt-in with a local API key; tests mock HTTP only. Not live-verified. Managed identity is not implemented.

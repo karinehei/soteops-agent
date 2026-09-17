@@ -60,7 +60,7 @@ uv run --directory backend alembic upgrade head
 uv run soteops-seed
 ```
 
-Default `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake`. Those paths are what CI runs. To try local Ollama, set `LLM_PROVIDER=ollama` (and/or `EMBEDDING_PROVIDER=ollama`) and `OLLAMA_BASE_URL`; do not present that as a measured evaluation.
+Default `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake`. Those paths are what CI runs. To try local Ollama, set `LLM_PROVIDER=ollama` (and/or `EMBEDDING_PROVIDER=ollama`) and `OLLAMA_BASE_URL`; do not present that as a measured evaluation. Optional Azure OpenAI is documented in `docs/azure-openai.md`; keep it disabled unless live calls are separately authorized. This repository's tests mock Azure HTTP and do not call Azure.
 
 Demo login uses the seeded `@demo.invalid` accounts and passwords in `seed/identities.json`. Those passwords are local demo credentials, not directory or Entra ID secrets.
 
@@ -99,7 +99,7 @@ uv run pytest --junitxml=junit.xml --cov --cov-report=term-missing
 cd frontend && npm ci && npm run lint && npm run typecheck && npm run build
 ```
 
-Integration tests require Postgres on `127.0.0.1:5432` after migrations. CI sets `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake` and does not call Ollama or cloud AI. The Ollama adapter is covered by mocked timeout tests only. If port `5432` is already used by another project, set `POSTGRES_HOST_PORT` and `DATABASE_URL` to a free local port instead of stopping that project.
+Integration tests require Postgres on `127.0.0.1:5432` after migrations. CI sets `LLM_PROVIDER=fake` and `EMBEDDING_PROVIDER=fake` and does not call Ollama, Azure, or other cloud AI. The Ollama adapter is covered by mocked timeout tests only. Azure OpenAI tests use httpx MockTransport only. If port `5432` is already used by another project, set `POSTGRES_HOST_PORT` and `DATABASE_URL` to a free local port instead of stopping that project.
 
 GitHub Actions starts the mock integration on `127.0.0.1:8001` before pytest. Forwarding tests also drive the mock in-process. `FORWARD_MAX_ATTEMPTS` defaults to 3; a timeout after send is reconciled by idempotency-key lookup and does not mint a new key.
 
